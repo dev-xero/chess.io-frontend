@@ -21,7 +21,7 @@ export default function Page() {
 
     return (
         <CenteredGrid>
-            <section className="md:w-[512px] max-w-lg flex flex-col items-center p-2 relative">
+            <section className="w-screen md:w-[512px] max-w-lg flex flex-col items-center py-2 px-4 relative">
                 <Marker />
                 <Header />
                 <section className="text-center flex flex-col mt-8">
