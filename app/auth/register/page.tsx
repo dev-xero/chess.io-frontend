@@ -4,6 +4,7 @@ import FilledButton from '@/components/FilledButton';
 import Header from '@/components/Header';
 import InputField from '@/components/InputField';
 import Link from '@/components/Link';
+import Marker from '@/components/Marker';
 import CenteredGrid from '@/layout/CenteredGrid';
 import { Horse, Lock, Asterisk } from '@phosphor-icons/react';
 import { FormEvent, useState } from 'react';
@@ -20,7 +21,8 @@ export default function Page() {
 
     return (
         <CenteredGrid>
-            <section className="md:w-[512px] max-w-lg flex flex-col items-center p-2">
+            <section className="md:w-[512px] max-w-lg flex flex-col items-center p-2 relative">
+                <Marker />
                 <Header />
                 <section className="text-center flex flex-col mt-8">
                     <h2 className="font-bold mb-2 text-2xl">
@@ -33,7 +35,7 @@ export default function Page() {
                 <form
                     action="/"
                     onSubmit={handleUserRegistration}
-                    className="md:w-[512px]"
+                    className="w-full md:max-w-[512px] md:w-[512px]"
                 >
                     <section className="my-8 flex flex-col gap-2">
                         <InputField

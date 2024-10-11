@@ -4,6 +4,7 @@ import FilledButton from '@/components/FilledButton';
 import Header from '@/components/Header';
 import InputField from '@/components/InputField';
 import Link from '@/components/Link';
+import Marker from '@/components/Marker';
 import CenteredGrid from '@/layout/CenteredGrid';
 import { Horse, Lock } from '@phosphor-icons/react';
 import { FormEvent, useState } from 'react';
@@ -19,7 +20,8 @@ export default function Page() {
 
     return (
         <CenteredGrid>
-            <section className="md:w-[512px] max-w-lg flex flex-col items-center p-2">
+            <section className="md:w-[512px] max-w-lg flex flex-col items-center p-2 relative">
+                <Marker />
                 <Header />
                 <section className="text-center flex flex-col mt-8">
                     <h2 className="font-bold mb-2 text-2xl">Log Back In</h2>
