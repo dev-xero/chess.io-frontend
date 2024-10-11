@@ -6,8 +6,8 @@ interface ICenteredGridProps {
 
 export default function CenteredGrid({ children }: ICenteredGridProps) {
     return (
-        <main className="w-full h-full grid place-items-center">
-                {children}
-            </main>
+        <main className="w-full h-full md:grid place-items-center">
+            {children}
+        </main>
     );
 }
