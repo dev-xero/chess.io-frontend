@@ -19,6 +19,14 @@ export default function Page() {
         <CenteredGrid>
             <section className="w-[512px] max-w-lg flex flex-col items-center">
                 <Header />
+                <section className="text-center flex flex-col mt-8">
+                    <h2 className="font-bold mb-2 text-2xl">
+                        Create Your Account
+                    </h2>
+                    <p className="text-faded">
+                        Let&apos;s create an account so you can play on ChessIO!
+                    </p>
+                </section>
                 <form
                     action="/"
                     onSubmit={handleUserRegistration}
@@ -49,7 +57,7 @@ export default function Page() {
                             onChange={(val) => setSecretQuestion(val)}
                             type="text"
                         />
-                        <p className="text-xs text-primary mt-2">
+                        <p className="text-xs text-primary mt-2 text-center">
                             We ask for a secret question in case you forget your
                             password.
                         </p>
