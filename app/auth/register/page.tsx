@@ -3,6 +3,7 @@
 import FilledButton from '@/components/FilledButton';
 import Header from '@/components/Header';
 import InputField from '@/components/InputField';
+import Link from '@/components/Link';
 import CenteredGrid from '@/layout/CenteredGrid';
 import { Horse, Lock, Asterisk } from '@phosphor-icons/react';
 import { FormEvent, useState } from 'react';
@@ -14,11 +15,12 @@ export default function Page() {
 
     const handleUserRegistration = (ev: FormEvent<HTMLFormElement>) => {
         ev.preventDefault();
+        alert('Not yet implemented!');
     };
 
     return (
         <CenteredGrid>
-            <section className="w-[512px] max-w-lg flex flex-col items-center">
+            <section className="md:w-[512px] max-w-lg flex flex-col items-center">
                 <Header />
                 <section className="text-center flex flex-col mt-8">
                     <h2 className="font-bold mb-2 text-2xl">
@@ -67,6 +69,18 @@ export default function Page() {
                         label="Register"
                         onClick={() => handleUserRegistration}
                     />
+                    <section className="mt-4 flex items-center justify-center gap-2">
+                        <Link
+                            href="/auth/login"
+                            label="Login Instead"
+                            external={false}
+                        />
+                        <Link
+                            href="/auth/forgot-password"
+                            label="Forgot Password"
+                            external={false}
+                        />
+                    </section>
                 </form>
             </section>
         </CenteredGrid>
