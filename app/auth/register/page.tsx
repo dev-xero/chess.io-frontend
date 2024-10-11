@@ -1,5 +1,6 @@
 'use client';
 
+import FilledButton from '@/components/FilledButton';
 import Header from '@/components/Header';
 import InputField from '@/components/InputField';
 import CenteredGrid from '@/layout/CenteredGrid';
@@ -62,6 +63,10 @@ export default function Page() {
                             password.
                         </p>
                     </section>
+                    <FilledButton
+                        label="Register"
+                        onClick={() => handleUserRegistration}
+                    />
                 </form>
             </section>
         </CenteredGrid>
