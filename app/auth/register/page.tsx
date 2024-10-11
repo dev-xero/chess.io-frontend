@@ -3,6 +3,7 @@
 import Header from '@/components/Header';
 import InputField from '@/components/InputField';
 import CenteredGrid from '@/layout/CenteredGrid';
+import { Horse, Lock, Asterisk } from '@phosphor-icons/react';
 import { FormEvent, useState } from 'react';
 
 export default function Page() {
@@ -26,7 +27,7 @@ export default function Page() {
                     <section className="my-8 flex flex-col gap-2">
                         <InputField
                             name="username-field"
-                            icon={undefined}
+                            icon={<Horse size={24} />}
                             placeholder="Username"
                             text={userName}
                             onChange={(val) => setUserName(val)}
@@ -34,7 +35,7 @@ export default function Page() {
                         />
                         <InputField
                             name="password-field"
-                            icon={undefined}
+                            icon={<Lock size={24} />}
                             placeholder="Password"
                             text={password}
                             onChange={(val) => setPassword(val)}
@@ -42,7 +43,7 @@ export default function Page() {
                         />
                         <InputField
                             name="secret-field"
-                            icon={undefined}
+                            icon={<Asterisk size={24} />}
                             placeholder="Secret question"
                             text={secretQuestion}
                             onChange={(val) => setSecretQuestion(val)}

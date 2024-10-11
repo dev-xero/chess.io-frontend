@@ -8,6 +8,7 @@ export default function Header() {
             src="/monochrome.svg"
             alt="chess.io"
             className="mb-2 select-none"
+            priority={true}
         />
     );
 }
