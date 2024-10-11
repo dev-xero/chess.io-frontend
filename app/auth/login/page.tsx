@@ -24,7 +24,7 @@ export default function Page() {
                 <Marker />
                 <Header />
                 <section className="text-center flex flex-col mt-8">
-                    <h2 className="font-bold mb-2 text-2xl">Log Back In</h2>
+                    <h2 className="font-bold mb-2 text-2xl">Welcome Back</h2>
                     <p className="text-faded">
                         Log back into your account to play friends!
                     </p>

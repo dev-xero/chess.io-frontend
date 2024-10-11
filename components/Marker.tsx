@@ -8,7 +8,7 @@ export default function Marker() {
                 height={128}
                 src="/marker.svg"
                 alt=""
-                className="absolute top-[24px] left-[24px] -translate-x-1/2 -translate-y-1/2 z-[-99]"
+                className="absolute top-[32px] left-[32px] -translate-x-1/2 -translate-y-1/2 z-[-99]"
             />
             <Image
                 width={128}
