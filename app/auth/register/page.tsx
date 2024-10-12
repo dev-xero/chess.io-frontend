@@ -10,8 +10,9 @@ import CenteredGrid from '@/layout/CenteredGrid';
 import { Horse, Lock, Asterisk } from '@phosphor-icons/react';
 import { FormEvent, useState } from 'react';
 import config from '@/config/config';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import NetworkConfig from '@/config/http';
+import { ErrorResponse } from '@/util/error';
 
 export default function Page() {
     const [userName, setUserName] = useState('');
@@ -50,7 +51,7 @@ export default function Page() {
 
         // make network request
         try {
-            const { data} = await axios.post(
+            const { data } = await axios.post(
                 `${config.api}/auth/register`,
                 {
                     username: userName,
@@ -60,13 +61,22 @@ export default function Page() {
                 NetworkConfig
             );
 
-            if (data.status != 201) {
-                console.warn("wahala");
-            }
-
-            console.log("data:", data);
+            console.log(data);
+            // save user data to cookies
+            // save auth token to cookie
+            // redirect to home
         } catch (err) {
-            console.warn(err);
+            const axiosError = err as AxiosError;
+            if (axiosError.response) {
+                console.warn(axiosError.response);
+                const error =
+                    ((err as AxiosError).response?.data as ErrorResponse)?.[
+                        'error'
+                    ] ?? 'An unknown error occurred.';
+                displayError(error);
+            } else {
+                displayError('An unknown error occurred.');
+            }
         } finally {
             setIsDisabled(false);
         }

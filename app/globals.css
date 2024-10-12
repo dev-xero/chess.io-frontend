@@ -29,3 +29,11 @@ body {
         text-wrap: balance;
     }
 }
+
+input:autofill {
+    background: var(--background);
+}
+
+input {
+    filter: none;
+}
