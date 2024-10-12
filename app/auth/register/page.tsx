@@ -5,18 +5,71 @@ import Header from '@/components/Header';
 import InputField from '@/components/InputField';
 import Link from '@/components/Link';
 import Marker from '@/components/Marker';
+import Error from '@/components/Error';
 import CenteredGrid from '@/layout/CenteredGrid';
 import { Horse, Lock, Asterisk } from '@phosphor-icons/react';
 import { FormEvent, useState } from 'react';
+import config from '@/config/config';
+import axios from 'axios';
+import NetworkConfig from '@/config/http';
 
 export default function Page() {
     const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
     const [secretQuestion, setSecretQuestion] = useState('');
+    const [isDisabled, setIsDisabled] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleUserRegistration = (ev: FormEvent<HTMLFormElement>) => {
+    const refreshForm = () => {
+        setError('');
+        setIsDisabled(true);
+    };
+
+    const displayError = (msg: string) => {
+        setError(msg);
+        setIsDisabled(false);
+    };
+
+    const handleUserRegistration = async (ev: FormEvent<HTMLFormElement>) => {
         ev.preventDefault();
-        alert('Not yet implemented!');
+        refreshForm();
+
+        if (
+            userName.trim().length == 0 ||
+            password.trim().length == 0 ||
+            secretQuestion.trim().length == 0
+        ) {
+            displayError('Please fill all fields.');
+            return;
+        }
+
+        if (password.length < 8) {
+            displayError('Password cannot be less than 8 characters.');
+            return;
+        }
+
+        // make network request
+        try {
+            const { data} = await axios.post(
+                `${config.api}/auth/register`,
+                {
+                    username: userName,
+                    password: password,
+                    secretQuestion: secretQuestion,
+                },
+                NetworkConfig
+            );
+
+            if (data.status != 201) {
+                console.warn("wahala");
+            }
+
+            console.log("data:", data);
+        } catch (err) {
+            console.warn(err);
+        } finally {
+            setIsDisabled(false);
+        }
     };
 
     return (
@@ -67,9 +120,11 @@ export default function Page() {
                             password.
                         </p>
                     </section>
+                    <Error err={error} />
                     <FilledButton
                         label="Register"
                         onClick={() => handleUserRegistration}
+                        isDisabled={isDisabled}
                     />
                     <section className="mt-4 flex items-center justify-center gap-4">
                         <Link
