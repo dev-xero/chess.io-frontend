@@ -13,6 +13,8 @@ import config from '@/config/config';
 import axios, { AxiosError } from 'axios';
 import NetworkConfig from '@/config/http';
 import { ErrorResponse } from '@/util/error';
+import { setCookie } from 'cookies-next';
+import { keys } from '@/config/keys';
 
 export default function Page() {
     const [userName, setUserName] = useState('');
@@ -66,14 +68,14 @@ export default function Page() {
                 NetworkConfig
             );
 
-            console.log(data);
-            // save user data to cookies
-            // save auth token to cookie
-            // redirect to home
+            const { payload } = data.payload;
+            setCookie(keys.auth, payload.auth.token)
+            localStorage.setItem(keys.user, JSON.stringify(payload.user));
+            window.location.href = '/';
         } catch (err) {
             const axiosError = err as AxiosError;
             if (axiosError.response) {
-                console.warn(axiosError.response);
+            console.warn(axiosError.response);
                 const error =
                     ((err as AxiosError).response?.data as ErrorResponse)?.[
                         'error'
