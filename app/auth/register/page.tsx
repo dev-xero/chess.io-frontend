@@ -68,11 +68,14 @@ export default function Page() {
                 NetworkConfig
             );
 
-            const { payload } = data.payload;
-            setCookie(keys.auth, payload.auth.token)
+            const { payload } = data;
+            setCookie(keys.auth, payload.auth.token, {
+                sameSite: 'none'
+            })
             localStorage.setItem(keys.user, JSON.stringify(payload.user));
             window.location.href = '/';
         } catch (err) {
+            console.error(err);
             const axiosError = err as AxiosError;
             if (axiosError.response) {
             console.warn(axiosError.response);
