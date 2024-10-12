@@ -69,9 +69,7 @@ export default function Page() {
             );
 
             const { payload } = data;
-            setCookie(keys.auth, payload.auth.token, {
-                sameSite: 'none'
-            })
+            setCookie(keys.auth, payload.auth.token)
             localStorage.setItem(keys.user, JSON.stringify(payload.user));
             window.location.href = '/';
         } catch (err) {
