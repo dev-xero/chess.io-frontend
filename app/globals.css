@@ -37,3 +37,8 @@ input:autofill {
 input {
     filter: none;
 }
+
+::selection {
+    background: #4F90F0;
+    color: var(--foreground);
+}

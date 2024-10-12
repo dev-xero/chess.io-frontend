@@ -49,6 +49,11 @@ export default function Page() {
             return;
         }
 
+        if (secretQuestion.length < 8) {
+            displayError('Secret question cannot be less than 8 characters.');
+            return;
+        }
+
         // Attempt to register a user
         try {
             const { data } = await axios.post(
