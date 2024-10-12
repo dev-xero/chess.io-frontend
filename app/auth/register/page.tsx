@@ -49,7 +49,7 @@ export default function Page() {
             return;
         }
 
-        // make network request
+        // Attempt to register a user
         try {
             const { data } = await axios.post(
                 `${config.api}/auth/register`,
