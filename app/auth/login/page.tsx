@@ -12,6 +12,7 @@ import { FormEvent, useState } from 'react';
 export default function Page() {
     const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
+    const [isDisabled, setIsDisabled] = useState(false);
 
     const handleUserLogin = (ev: FormEvent<HTMLFormElement>) => {
         ev.preventDefault();
@@ -54,6 +55,7 @@ export default function Page() {
                     </section>
                     <FilledButton
                         label="Log In"
+                        isDisabled={isDisabled}
                         onClick={() => handleUserLogin}
                     />
                     <section className="mt-4 flex items-center justify-center gap-4">
