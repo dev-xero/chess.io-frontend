@@ -3,6 +3,7 @@
 import FilledButton from '@/components/FilledButton';
 import Header from '@/components/Header';
 import InputField from '@/components/InputField';
+import Error from '@/components/Error';
 import Link from '@/components/Link';
 import Marker from '@/components/Marker';
 import CenteredGrid from '@/layout/CenteredGrid';
@@ -12,10 +13,17 @@ import { FormEvent, useState } from 'react';
 export default function Page() {
     const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
     const [isDisabled, setIsDisabled] = useState(false);
+
+    const refreshForm = () => {
+        setError('');
+        setIsDisabled(true);
+    };
 
     const handleUserLogin = (ev: FormEvent<HTMLFormElement>) => {
         ev.preventDefault();
+        refreshForm();
         alert('Not yet implemented!');
     };
 
@@ -53,6 +61,7 @@ export default function Page() {
                             type="password"
                         />
                     </section>
+                    <Error err={error} />
                     <FilledButton
                         label="Log In"
                         isDisabled={isDisabled}
