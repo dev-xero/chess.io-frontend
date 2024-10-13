@@ -69,7 +69,9 @@ export default function Page() {
             );
 
             const { payload } = data;
-            setCookie(keys.auth, payload.auth.token)
+            setCookie(keys.auth, payload.auth.token, {
+                expires: new Date(new Date().getTime() * 60 * 60 * 1000) // expires in 1 hr
+            })
             localStorage.setItem(keys.user, JSON.stringify(payload.user));
             window.location.href = '/';
         } catch (err) {
