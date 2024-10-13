@@ -15,6 +15,7 @@ import NetworkConfig from '@/config/http';
 import { ErrorResponse } from '@/util/error';
 import { setCookie } from 'cookies-next';
 import { keys } from '@/config/keys';
+import { inOneHour } from '@/util/date';
 
 export default function Page() {
     const [userName, setUserName] = useState('');
@@ -70,15 +71,15 @@ export default function Page() {
 
             const { payload } = data;
             setCookie(keys.auth, payload.auth.token, {
-                expires: new Date(new Date().getTime() * 60 * 60 * 1000) // expires in 1 hr
-            })
+                expires: inOneHour(),
+            });
             localStorage.setItem(keys.user, JSON.stringify(payload.user));
             window.location.href = '/';
         } catch (err) {
             console.error(err);
             const axiosError = err as AxiosError;
             if (axiosError.response) {
-            console.warn(axiosError.response);
+                console.warn(axiosError.response);
                 const error =
                     ((err as AxiosError).response?.data as ErrorResponse)?.[
                         'error'
@@ -144,6 +145,7 @@ export default function Page() {
                     <FilledButton
                         label="Register"
                         onClick={() => handleUserRegistration}
+                        pendingText="Registering"
                         isDisabled={isDisabled}
                     />
                     <section className="mt-4 flex items-center justify-center gap-4">
