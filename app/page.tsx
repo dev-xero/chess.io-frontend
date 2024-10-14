@@ -1,11 +1,10 @@
 import ProtectedPage from '@/components/ProtectedPage';
+import HomeFragment from '@/fragments/HomeFragment';
 
 export default function Home() {
     return (
         <ProtectedPage>
-            <main>
-                <h2>Welcome to ChessIO</h2>
-            </main>
+            <HomeFragment player={} />
         </ProtectedPage>
     );
 }
