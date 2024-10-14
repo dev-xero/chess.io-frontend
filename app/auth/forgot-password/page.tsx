@@ -72,7 +72,7 @@ export default function Page() {
             localStorage.clear();
             setSuccess(data.message);
             setTimeout(() => {
-                window.location.href = '/auth/register';
+                window.location.href = '/auth/login';
             }, 500);
         } catch (err) {
             console.error(err);
