@@ -1,3 +1,5 @@
+'use client';
+
 import IPlayer from '@/global/i.player';
 import { Dispatch, SetStateAction, createContext } from 'react';
 

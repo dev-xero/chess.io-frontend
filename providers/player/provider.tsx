@@ -1,6 +1,8 @@
+'use client';
+
 import { keys } from '@/config/keys';
 import IPlayer from '@/global/i.player';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlayerContext } from './context';
 
 interface IPlayerProviderProps {
@@ -11,13 +13,9 @@ export const PlayerProvider = ({ children }: IPlayerProviderProps) => {
     const [player, setPlayer] = useState<IPlayer | null>(null);
 
     useEffect(() => {
-        try {
-            const storedPlayer = localStorage.getItem(keys.user);
-            if (storedPlayer) {
-                setPlayer(JSON.parse(storedPlayer));
-            }
-        } catch (error) {
-            console.error('Failed to parse player from localStorage:', error);
+        const storedPlayer = localStorage.getItem(keys.user);
+        if (storedPlayer) {
+            setPlayer(JSON.parse(storedPlayer));
         }
     }, []);
 

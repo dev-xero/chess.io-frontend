@@ -1,5 +1,5 @@
 import Lottie from 'lottie-react';
-import Header from './Header';
+import Header from '../components/Header';
 import spinnerAnimation from '@/animated/spinner.json';
 
 export default function LoadingFragment() {
@@ -11,7 +11,7 @@ export default function LoadingFragment() {
                     <div className="w-8 max-w-8 h-8 max-h-8">
                         <Lottie animationData={spinnerAnimation} loop={true} />
                     </div>
-                   <span>Just a moment</span>
+                    <span>Just a moment</span>
                 </h1>
             </div>
         </section>
