@@ -14,6 +14,7 @@ const config: Config = {
                 background: 'var(--background)',
                 foreground: 'var(--foreground)',
                 base: '#0B0F17',
+                lighter: '#151B28',
                 faded: '#ADB7CB',
                 primary: '#4F90F0',
                 white: '#FFFFFF',

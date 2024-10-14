@@ -11,10 +11,15 @@ import IconButton from '@/components/IconButton';
 import ChallengeIcon from '@/components/ChallengeIcon';
 import { ChartLineUp, SignOut } from '@phosphor-icons/react';
 import config from '@/config/config'
+import axios from 'axios';
+import NetworkConfig from '@/config/http';
+import { deleteCookie, getCookie } from 'cookies-next';
+import { keys } from '@/config/keys';
 
 export default function HomeFragment() {
     const { player } = useContext(PlayerContext);
     const [isLoading, setIsLoading] = useState(true);
+    const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
     useEffect(() => {
         if (player !== null) {
@@ -26,6 +31,25 @@ export default function HomeFragment() {
         return <LoadingFragment />;
     }
 
+    const handleLogOut = async () => {
+        try {
+            setIsLogoutLoading(true);
+            await axios.get(`${config.api}/auth/logout`, {
+                headers: {
+                    ...NetworkConfig.headers,
+                    Authorization: `Bearer ${getCookie(keys.auth)}`
+                }
+            });
+            localStorage.clear();
+            deleteCookie(keys.auth);
+            window.location.href = '/auth/login'
+        } catch(err) {
+            console.error(err);
+        } finally {
+            setIsLogoutLoading(false);
+        }
+    }
+
     return (
         <CenteredGrid>
             <main className="w-full md:w-[512px] max-w-lg flex flex-col items-center py-2 px-4 relative">
@@ -33,13 +57,13 @@ export default function HomeFragment() {
                 <Header />
                 {/* INFO SECTION */}
                 <section className="text-center flex items-center gap-2 mt-8">
-                    <p className="font-bold mb-2 text-base">
+                    <p className="font-bold mb-2 text-faded">
                         Logged in as:{' '}
                         <span className="!font-normal text-primary">
                             @{(player as IPlayer).username}
                         </span>
                     </p>
-                    <p className="font-bold mb-2 text-base">
+                    <p className="font-bold mb-2 text-faded">
                         Rating:{' '}
                         <span className="!font-normal text-primary">
                             {(player as IPlayer).rating}
@@ -64,8 +88,9 @@ export default function HomeFragment() {
                     />
                     <IconButton
                         label="Logout"
-                        onClick={() => {}}
-                        isDisabled={false}
+                        onClick={handleLogOut}
+                        isDisabled={isLogoutLoading}
+                        pendingText="Logging Out"
                         icon={<SignOut size={24} />}
                         secondary={true}
                     />
