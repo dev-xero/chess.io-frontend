@@ -5,6 +5,7 @@ import FilledButton from '@/components/FilledButton';
 import InputField from '@/components/InputField';
 import Link from '@/components/Link';
 import Marker from '@/components/Marker';
+import Success from '@/components/Success';
 import config from '@/config/config';
 import NetworkConfig from '@/config/http';
 import CenteredGrid from '@/layout/CenteredGrid';
@@ -15,6 +16,7 @@ import { FormEvent, useState } from 'react';
 
 export default function Page() {
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [isDisabled, setIsDisabled] = useState(false);
     const [userName, setUserName] = useState('');
     const [secretQuestion, setSecretQuestion] = useState('');
@@ -22,6 +24,7 @@ export default function Page() {
 
     const refreshForm = () => {
         setError('');
+        setSuccess('');
         setIsDisabled(true);
     };
 
@@ -65,10 +68,12 @@ export default function Page() {
                 NetworkConfig
             );
 
-            const { payload } = data;
-            alert(payload.message);
+            console.log(data);
             localStorage.clear();
-            // window.location.href = '/auth/register'
+            setSuccess(data.message);
+            setTimeout(() => {
+                window.location.href = '/auth/register';
+            }, 500);
         } catch (err) {
             console.error(err);
             const axiosError = err as AxiosError;
@@ -130,6 +135,7 @@ export default function Page() {
                         />
                     </section>
                     <Error err={error} />
+                    <Success msg={success} />
                     <FilledButton
                         label="Reset"
                         isDisabled={isDisabled}
