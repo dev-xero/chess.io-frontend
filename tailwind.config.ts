@@ -14,7 +14,8 @@ const config: Config = {
                 foreground: 'var(--foreground)',
                 base: '#0B0F17',
                 faded: '#ADB7CB',
-                primary: '#4F90F0'
+                primary: '#4F90F0',
+                white: '#FFFFFF',
             },
         },
     },
