@@ -3,27 +3,89 @@
 import Error from '@/components/Error';
 import FilledButton from '@/components/FilledButton';
 import InputField from '@/components/InputField';
+import Link from '@/components/Link';
 import Marker from '@/components/Marker';
+import config from '@/config/config';
+import NetworkConfig from '@/config/http';
 import CenteredGrid from '@/layout/CenteredGrid';
+import { ErrorResponse } from '@/util/error';
 import { Asterisk, Horse, Lock } from '@phosphor-icons/react';
+import axios, { AxiosError } from 'axios';
 import { FormEvent, useState } from 'react';
 
 export default function Page() {
     const [error, setError] = useState('');
     const [isDisabled, setIsDisabled] = useState(false);
-    const [userName, setUserName] = useState('')
-    const [secretQuestion, setSecretQuestion] = useState('')
-    const [newPassword, setNewPassword] = useState('')
-    
+    const [userName, setUserName] = useState('');
+    const [secretQuestion, setSecretQuestion] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+
     const refreshForm = () => {
         setError('');
         setIsDisabled(true);
     };
 
+    const displayError = (msg: string) => {
+        setError(msg);
+        setIsDisabled(false);
+    };
+
     const handlePasswordReset = async (ev: FormEvent<HTMLFormElement>) => {
         ev.preventDefault();
         refreshForm();
-    }
+
+        if (
+            userName.trim().length == 0 ||
+            newPassword.trim().length == 0 ||
+            secretQuestion.trim().length == 0
+        ) {
+            displayError('Please fill all fields.');
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            displayError('New password cannot be less than 8 characters.');
+            return;
+        }
+
+        if (secretQuestion.length < 8) {
+            displayError('Secret question cannot be less than 8 characters.');
+            return;
+        }
+
+        // attempt to reset password
+        try {
+            const { data } = await axios.post(
+                `${config.api}/auth/reset-password`,
+                {
+                    username: userName,
+                    newPassword: newPassword,
+                    secretQuestion: secretQuestion,
+                },
+                NetworkConfig
+            );
+
+            const { payload } = data;
+            alert(payload.message);
+            localStorage.clear();
+            // window.location.href = '/auth/register'
+        } catch (err) {
+            console.error(err);
+            const axiosError = err as AxiosError;
+            if (axiosError.response) {
+                console.warn(axiosError.response);
+                const error =
+                    ((err as AxiosError).response?.data as ErrorResponse)?.[
+                        'error'
+                    ] ?? 'An unknown error occurred.';
+                displayError(error);
+            } else {
+                displayError('An unknown error occurred.');
+            }
+        } finally {
+            setIsDisabled(false);
+        }
+    };
 
     return (
         <CenteredGrid>
@@ -32,7 +94,8 @@ export default function Page() {
                 <section className="text-center flex flex-col mt-8">
                     <h2 className="font-bold mb-2 text-2xl">Forgot Password</h2>
                     <p className="text-faded">
-                        You can reset your password by providing your secret question. Then you can log in using the new password.
+                        You can reset your password by providing your secret
+                        question. Then you can log in using the new password.
                     </p>
                 </section>
                 <form
@@ -73,7 +136,14 @@ export default function Page() {
                         pendingText="Hang On"
                         onClick={() => handlePasswordReset}
                     />
-                    </form>
+                    <section className="mt-4 flex items-center justify-center gap-4">
+                        <Link
+                            href="/auth/register"
+                            label="Register Instead"
+                            external={false}
+                        />
+                    </section>
+                </form>
             </section>
         </CenteredGrid>
     );
