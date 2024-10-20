@@ -144,7 +144,7 @@ export default function Page() {
                     />
                     <section className="mt-4 flex items-center justify-center gap-4">
                         <Link
-                            href="/auth/register"
+                            href="/auth/login"
                             label="Login Instead"
                             external={false}
                         />
