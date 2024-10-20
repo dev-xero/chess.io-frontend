@@ -99,8 +99,7 @@ export default function Page() {
                 <section className="text-center flex flex-col mt-8">
                     <h2 className="font-bold mb-2 text-2xl">Forgot Password</h2>
                     <p className="text-faded">
-                        You can reset your password by providing your secret
-                        question. Then you can log in using the new password.
+                        We need your secret question to make sure it&apos;s you.
                     </p>
                 </section>
                 <form
