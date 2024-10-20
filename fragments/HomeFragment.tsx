@@ -95,7 +95,7 @@ export default function HomeFragment() {
                         secondary={true}
                     />
                 </section>
-                <p className="my-2 text-xs text-faded">Version {config.version}</p>
+                <p className="my-2 text-xs text-faded">Version: {config.version}</p>
             </main>
         </CenteredGrid>
     );

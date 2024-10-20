@@ -19,7 +19,7 @@ export default function InputField(props: IInputFieldProps) {
                 value={props.text}
                 onChange={(ev) => props.onChange(ev.target.value)}
                 className={clsx(
-                    'w-full px-4 py-2 rounded-md bg-base outline-none border-2 border-base text-foreground focus:border-primary transition-all',
+                    'w-full px-4 py-2 rounded-md bg-base outline-none border-2 border-lighter text-foreground focus:border-primary transition-all',
                     props.icon ? 'pl-10' : ''
                 )}
                 type={props.type}
