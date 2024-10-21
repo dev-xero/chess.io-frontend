@@ -10,7 +10,7 @@ import LoadingFragment from '@/fragments/LoadingFragment';
 import IconButton from '@/components/IconButton';
 import ChallengeIcon from '@/components/ChallengeIcon';
 import { ChartLineUp, SignOut } from '@phosphor-icons/react';
-import config from '@/config/config'
+import config from '@/config/config';
 import axios from 'axios';
 import NetworkConfig from '@/config/http';
 import { deleteCookie, getCookie } from 'cookies-next';
@@ -37,18 +37,18 @@ export default function HomeFragment() {
             await axios.get(`${config.api}/auth/logout`, {
                 headers: {
                     ...NetworkConfig.headers,
-                    Authorization: `Bearer ${getCookie(keys.auth)}`
-                }
+                    Authorization: `Bearer ${getCookie(keys.auth)}`,
+                },
             });
             localStorage.clear();
             deleteCookie(keys.auth);
-            window.location.href = '/auth/login'
-        } catch(err) {
+            window.location.href = '/auth/login';
+        } catch (err) {
             console.error(err);
         } finally {
             setIsLogoutLoading(false);
         }
-    }
+    };
 
     return (
         <CenteredGrid>
@@ -74,7 +74,9 @@ export default function HomeFragment() {
                 <section className="w-full my-4 flex flex-col gap-1">
                     <IconButton
                         label="New Challenge"
-                        onClick={() => {}}
+                        onClick={() =>
+                            (window.location.href = '/challenge/create')
+                        }
                         isDisabled={false}
                         icon={<ChallengeIcon size={24} />}
                         secondary={false}
@@ -95,7 +97,9 @@ export default function HomeFragment() {
                         secondary={true}
                     />
                 </section>
-                <p className="my-2 text-xs text-faded">Version: {config.version}</p>
+                <p className="my-2 text-xs text-faded">
+                    Version: {config.version}
+                </p>
             </main>
         </CenteredGrid>
     );

@@ -13,7 +13,7 @@ export default function ProtectedPage(props: IProtectedPageProps) {
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
-            window.location.href = '/auth/register';
+            window.location.href = '/auth/login';
         }
     }, [isAuthenticated, isLoading]);
 
