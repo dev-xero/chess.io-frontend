@@ -13,15 +13,11 @@ import NetworkConfig from '@/config/http';
 import { getCookie } from 'cookies-next';
 import { keys } from '@/config/keys';
 import config from '@/config/config';
-import Success from '@/components/Success';
 
 export default function Page() {
     const [selectedControl, setSelectedControl] = useState(TIME_CONTROL.RAPID);
     const [isPending, setIsPending] = useState(false);
-    const [isGameGenerated, setIsGameGenerated] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [afterMessage, setAfterMessage] = useState('');
     const timeControls = [
         { name: 'Rapid', control: TIME_CONTROL.RAPID },
         { name: 'Blitz', control: TIME_CONTROL.BLITZ },
@@ -49,6 +45,10 @@ export default function Page() {
             console.log('game duration:', gameDuration);
 
             const accessToken = getCookie(keys.auth);
+            if (!accessToken) {
+                displayError('Session has expired, log in again.');
+                return;
+            }
             const { data } = await axios.post(
                 `${config.api}/challenge/create?duration=${gameDuration}`,
                 {
@@ -62,10 +62,13 @@ export default function Page() {
                 }
             );
             // console.log(data);
-            setIsGameGenerated(true);
             const { expiresIn, link } = data.payload;
-            setSuccess(`${config.url}/challenge/${link}`);
-            setAfterMessage(`This link expires in ${expiresIn}`);
+            localStorage.setItem(
+                keys.game.pending,
+                JSON.stringify({ expiresIn, link })
+            );
+            const challengeID = link.split('/')[1];
+            window.location.href = `/challenge/pending/${challengeID}`;
         } catch (err) {
             const axiosError = err as AxiosError;
             if (axiosError.response) {
@@ -113,22 +116,16 @@ export default function Page() {
                         ))}
                     </section>
                 </section>
-                <Success msg={success} />
                 {/* CREATE CHALLENGE BUTTON */}
                 <IconButton
                     label="Create"
                     icon={<ChallengeIcon size={24} />}
                     secondary={false}
-                    isDisabled={isPending || isGameGenerated}
+                    isDisabled={isPending}
                     onClick={handleNewChallengeCreation}
-                    pendingText={
-                        isGameGenerated ? 'Share this link' : 'Creating'
-                    }
+                    pendingText="Creating"
                 />
                 <Error err={error} />
-                {afterMessage && (
-                    <p className="mt-4 text-faded text-sm">{afterMessage}</p>
-                )}
             </section>
         </CenteredGrid>
     );
