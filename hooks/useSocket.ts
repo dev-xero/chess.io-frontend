@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import config from '@/config/config';
 
 const useWebSocket = (userId: string | null) => {
+    const wsRef = useRef<WebSocket | null>(null)
     const [message, setMessage] = useState<string | null>(null);
     const [isConnected, setIsConnected] = useState(false);
 
@@ -38,7 +39,15 @@ const useWebSocket = (userId: string | null) => {
         };
     }, [userId]);
 
-    return { isConnected, message };
+    const sendMessage = (msg: unknown) => {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify(msg));
+        } else {
+            console.warn('WebSocket is not connected.');
+        }
+    };
+
+    return { isConnected, message, sendMessage };
 };
 
 export default useWebSocket;
