@@ -10,6 +10,7 @@ const useWebSocket = (userId: string | null) => {
         if (!userId) return;
 
         const ws = new WebSocket(config.ws);
+        wsRef.current = ws
 
         ws.onopen = () => {
             console.log('WebSocket connection established.');
@@ -36,12 +37,14 @@ const useWebSocket = (userId: string | null) => {
             if (ws.readyState === WebSocket.OPEN) {
                 ws.close();
             }
+            wsRef.current = null
         };
     }, [userId]);
 
     const sendMessage = (msg: unknown) => {
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
             wsRef.current.send(JSON.stringify(msg));
+            console.log("message sent:", msg);
         } else {
             console.warn('WebSocket is not connected.');
         }
