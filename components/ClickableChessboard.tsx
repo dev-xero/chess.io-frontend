@@ -16,7 +16,7 @@ type SquareStyles = Record<Square, CSSProperties>;
 
 interface IChessBoardInterface {
     onMoveCompleted(history: string[]): void;
-    setWhoseTurn(color: 'w' | 'b'): void,
+    setWhoseTurn(color: 'w' | 'b'): void;
 }
 
 export default function ClickableChessboard(props: IChessBoardInterface) {
@@ -197,7 +197,7 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
     useEffect(() => {
         const newSquares: SquareStyles = {} as SquareStyles;
         props.onMoveCompleted(game.history());
-        props.setWhoseTurn(game.turn())
+        props.setWhoseTurn(game.turn());
 
         if (game.inCheck()) {
             const kingSquare = findKingSquare(game.turn());
@@ -226,10 +226,10 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
                     boxShadow: 'inset 0 0 1px 6px rgba(100,252,108,0.75)',
                 }}
                 customDarkSquareStyle={{
-                    backgroundColor: '#727B8B',
+                    backgroundColor: '#485A75',
                 }}
                 customLightSquareStyle={{
-                    backgroundColor: '#BDC8DA',
+                    backgroundColor: '#ADC0DC',
                 }}
                 customSquareStyles={{
                     ...moveSquares,
