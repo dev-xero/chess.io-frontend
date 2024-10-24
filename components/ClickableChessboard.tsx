@@ -1,10 +1,10 @@
 'use client';
 
 import { Chess, Square, Move, PieceSymbol } from 'chess.js';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import {
-    Piece as ChessPiece,
+    // Piece as ChessPiece,
     // CustomPieces,
     PromotionPieceOption,
 } from 'react-chessboard/dist/chessboard/types';
