@@ -4,8 +4,8 @@ import { keys } from '@/config/keys';
 import CenteredGrid from '@/layout/CenteredGrid';
 import { useEffect, useState } from 'react';
 import config from '@/config/config';
-import useWebSocket from '@/hooks/useSocket';
 import ProtectedPage from '@/components/ProtectedPage';
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 interface IPendingChallenge {
     link: string;
@@ -16,6 +16,13 @@ export default function Page() {
     const [pendingChallenge, setPendingChallenge] =
         useState<IPendingChallenge | null>(null);
     const [userID, setUserID] = useState<string | null>(null);
+    const { sendJsonMessage, lastMessage, readyState } = useWebSocket(
+        config.ws,
+        {
+            share: false,
+            shouldReconnect: () => true,
+        }
+    );
 
     useEffect(() => {
         const currentUser = localStorage.getItem(keys.user);
@@ -38,14 +45,19 @@ export default function Page() {
         setPendingChallenge(theChallenge);
     }, []);
 
-    const { isConnected, message } = useWebSocket(userID);
+    useEffect(() => {
+        console.log('Connection state changed.');
+        if (readyState == ReadyState.OPEN && userID) {
+            sendJsonMessage({
+                type: 'auth',
+                userId: userID,
+            });
+        }
+    }, [readyState]);
 
     useEffect(() => {
-        console.log("isConnected:", isConnected);
-        if (message) {
-            console.log('new message received:', message);
-        }
-    }, [message]);
+        console.log(`Got a new message: ${lastMessage?.data}`);
+    }, [lastMessage]);
 
     return (
         <ProtectedPage>

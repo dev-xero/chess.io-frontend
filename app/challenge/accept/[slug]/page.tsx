@@ -4,7 +4,6 @@ import { keys } from '@/config/keys';
 import { useState, useEffect, useCallback } from 'react';
 import CenteredGrid from '@/layout/CenteredGrid';
 import Error from '@/components/Error';
-import useWebSocket from '@/hooks/useSocket';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePathname } from 'next/navigation';
 import axios, { AxiosError } from 'axios';
@@ -12,24 +11,19 @@ import { ErrorResponse } from '@/util/error';
 import config from '@/config/config';
 import { getCookie } from 'cookies-next';
 import NetworkConfig from '@/config/http';
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 export default function Page() {
     const [userID, setUserID] = useState<string | null>(null);
+    const { sendJsonMessage, lastMessage, readyState } = useWebSocket(
+        config.ws,
+        {
+            share: false,
+            shouldReconnect: () => true,
+        }
+    );
     const [error, setError] = useState('');
     const pathname = usePathname();
-
-    useEffect(() => {
-        const currentUser = localStorage.getItem(keys.user);
-        if (!currentUser) {
-            window.location.href = '/auth/login';
-            return;
-        }
-
-        const userData = JSON.parse(currentUser);
-        setUserID(userData.id);
-    }, []);
-
-    const { isConnected } = useWebSocket(userID);
 
     const acceptChallenge = useCallback(async (gameId: string) => {
         const accessToken = getCookie(keys.auth);
@@ -67,19 +61,41 @@ export default function Page() {
     }, []);
 
     useEffect(() => {
-        console.log('isConnected:', isConnected);
-
-        if (isConnected) {
-            const parts = pathname.split('/');
-            if (parts.length != 4) {
-                window.location.href = '/challenge/create';
-                return;
-            }
-            const gameId = parts[3];
-            console.log('gameId:', gameId);
-            acceptChallenge(gameId);
+        const currentUser = localStorage.getItem(keys.user);
+        if (!currentUser) {
+            window.location.href = '/auth/login';
+            return;
         }
-    }, [isConnected, pathname, acceptChallenge]);
+
+        const userData = JSON.parse(currentUser);
+        setUserID(userData.id);
+    }, []);
+
+    useEffect(() => {
+        console.log('Connection state changed.');
+        if (readyState == ReadyState.OPEN && userID) {
+            sendJsonMessage({
+                type: 'auth',
+                userId: userID,
+            });
+        }
+    }, [readyState, sendJsonMessage, userID]);
+
+    useEffect(() => {
+        console.log('Attempting to join game.');
+        const parts = pathname.split('/');
+        if (parts.length != 4) {
+            window.location.href = '/challenge/create';
+            return;
+        }
+        const gameID = parts[3];
+        if (userID && gameID) 
+            acceptChallenge(gameID);
+    }, [userID]);
+
+    useEffect(() => {
+        console.log(`Got a new message: ${lastMessage?.data}`);
+    }, [lastMessage]);
 
     return (
         <ProtectedPage>
