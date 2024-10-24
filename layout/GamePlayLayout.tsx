@@ -2,12 +2,14 @@
 
 import ClickableChessboard from '@/components/ClickableChessboard';
 import GameHistoryBar from '@/components/GameHistoryBar';
+import Header from '@/components/Header';
 import StatsBar from '@/components/StatsBar';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export default function GamePlayLayout() {
     const [movePairs, setMovePairs] = useState<string[][]>([]);
     const [moveCount, setMoveCount] = useState(0);
+    const [whoseTurn, setWhoseTurn] = useState<'w' | 'b'>('w');
 
     function updateMoveHistory(move: string[]) {
         if (move.length != 0) {
@@ -29,17 +31,22 @@ export default function GamePlayLayout() {
         }
     }
 
-    useEffect(() => {
-        console.log(movePairs);
-    }, [movePairs]);
-
     return (
-        <section className="grid grid-cols-4 gap-2 mx-auto w-[calc(100%-16px)] py-2 !max-w-[1400px]">
-            <StatsBar />
-            <ClickableChessboard
-                onMoveCompleted={(history) => updateMoveHistory(history)}
-            />
-            <GameHistoryBar />
-        </section>
+        <>
+            <header className="w-full flex items-center justify-center mt-4">
+                <Header />
+            </header>
+            <section className="flex flex-col md:grid grid-cols-4 gap-2 mx-auto w-[calc(100%-16px)] py-2 !max-w-[1400px]">
+                <StatsBar />
+                <ClickableChessboard
+                    onMoveCompleted={(history) => updateMoveHistory(history)}
+                    setWhoseTurn={(color) => setWhoseTurn(color)}
+                />
+                <GameHistoryBar
+                    moveHistoryPairs={movePairs}
+                    whoseTurn={whoseTurn}
+                />
+            </section>
+        </>
     );
 }

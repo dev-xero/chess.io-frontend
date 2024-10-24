@@ -10,7 +10,7 @@ function Card({ children }: ICardProps) {
 
 export default function StatsBar() {
     return (
-        <aside className="col-span-1">
+        <aside className="col-span-1 order-2 md:order-1">
             <Card>
                 <h3>Rapid Game</h3>
                 <p>Time Limit: 10mins</p>
