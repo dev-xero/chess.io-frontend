@@ -1,7 +1,7 @@
 'use client';
 
-import ClickableChessboard from '@/components/ClickableChessboard';
+import GamePlayLayout from '@/components/GamePlayLayout';
 
 export default function Page() {
-    return <ClickableChessboard />;
+    return <GamePlayLayout />;
 }

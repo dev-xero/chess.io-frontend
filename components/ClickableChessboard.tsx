@@ -3,11 +3,7 @@
 import { Chess, Square, Move, PieceSymbol } from 'chess.js';
 import { useEffect, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
-import {
-    // Piece as ChessPiece,
-    // CustomPieces,
-    PromotionPieceOption,
-} from 'react-chessboard/dist/chessboard/types';
+import { PromotionPieceOption } from 'react-chessboard/dist/chessboard/types';
 import { CSSProperties } from 'react';
 
 interface IChessMove {
@@ -34,46 +30,6 @@ export default function ClickableChessboard() {
         {} as SquareStyles
     );
 
-    // const pieces: ChessPiece[] = useMemo(
-    //     () => [
-    //         'wP',
-    //         'wN',
-    //         'wB',
-    //         'wR',
-    //         'wQ',
-    //         'wK',
-    //         'bP',
-    //         'bN',
-    //         'bB',
-    //         'bR',
-    //         'bQ',
-    //         'bK',
-    //     ],
-    //     []
-    // );
-
-    // const customPieces = useMemo(() => {
-    //     const pieceComponents: CustomPieces = {};
-    //     pieces.forEach((piece) => {
-    //         pieceComponents[piece] = ({
-    //             squareWidth,
-    //         }: {
-    //             squareWidth: number;
-    //         }) => (
-    //             <div
-    //                 style={{
-    //                     width: squareWidth,
-    //                     height: squareWidth,
-    //                     backgroundImage: `url(/pieces/${piece}.png)`,
-    //                     backgroundSize: '100%',
-    //                 }}
-    //             />
-    //         );
-    //     });
-    //     return pieceComponents;
-    // }, [pieces]);
-
-    // Click Logic
     function getMoveOptions(square: Square) {
         const moves = game.moves({ square, verbose: true });
         if (moves.length === 0) {
@@ -83,12 +39,14 @@ export default function ClickableChessboard() {
 
         const newSquares: SquareStyles = {} as SquareStyles;
         moves.forEach((move: Move) => {
+            const targetPiece = game.get(move.to as Square);
+            const isCapture =
+                targetPiece && targetPiece.color !== game.get(square)?.color;
             newSquares[move.to] = {
-                background:
-                    game.get(move.to)?.color !== game.get(square)?.color
-                        ? 'radial-gradient(circle, rgba(0,0,0,.1) 20%, transparent 20%)'
-                        : 'radial-gradient(circle, rgba(0,0,0,.1) 20%, transparent 20%)',
-                borderRadius: '50%',
+                background: isCapture
+                    ? 'rgba(100,252,108,0.75)'
+                    : 'radial-gradient(circle, rgba(0,0,0,.1) 20%, transparent 20%)',
+                borderRadius: isCapture ? '0%' : '50%',
             };
         });
         newSquares[square] = {
@@ -102,9 +60,15 @@ export default function ClickableChessboard() {
         setRightClickedSquares(
             {} as Record<Square, { backgroundColor: string } | undefined>
         );
+
+        const piece = game.get(square as Square);
+        const isCurrentTurnPiece = piece && piece.color === game.turn();
+
         if (!moveFrom) {
-            const hasMoveOptions = getMoveOptions(square);
-            if (hasMoveOptions) setMoveFrom(square);
+            if (isCurrentTurnPiece) {
+                const hasMoveOptions = getMoveOptions(square);
+                if (hasMoveOptions) setMoveFrom(square);
+            }
             return;
         }
 
@@ -113,9 +77,12 @@ export default function ClickableChessboard() {
             const foundMove = moves.find(
                 (m) => m.from === moveFrom && m.to === square
             );
+
             if (!foundMove) {
-                const hasMoveOptions = getMoveOptions(square);
-                setMoveFrom(hasMoveOptions ? square : '');
+                if (isCurrentTurnPiece) {
+                    const hasMoveOptions = getMoveOptions(square);
+                    setMoveFrom(hasMoveOptions ? square : '');
+                }
                 return;
             }
 
@@ -142,8 +109,10 @@ export default function ClickableChessboard() {
             });
 
             if (move === null) {
-                const hasMoveOptions = getMoveOptions(square);
-                if (hasMoveOptions) setMoveFrom(square);
+                if (isCurrentTurnPiece) {
+                    const hasMoveOptions = getMoveOptions(square);
+                    if (hasMoveOptions) setMoveFrom(square);
+                }
                 return;
             }
 
@@ -171,16 +140,16 @@ export default function ClickableChessboard() {
         return true;
     }
 
-    function onSquareRightClick(square: Square) {
-        const color = 'rgba(0, 0, 255, 0.4)';
-        setRightClickedSquares((prev) => ({
-            ...prev,
-            [square]:
-                prev[square]?.backgroundColor === color
-                    ? undefined
-                    : { backgroundColor: color },
-        }));
-    }
+    // function onSquareRightClick(square: Square) {
+    //     const color = 'rgba(0, 0, 255, 0.4)';
+    //     setRightClickedSquares((prev) => ({
+    //         ...prev,
+    //         [square]:
+    //             prev[square]?.backgroundColor === color
+    //                 ? undefined
+    //                 : { backgroundColor: color },
+    //     }));
+    // }
 
     function makeADropMove(move: IChessMove) {
         const gameCopy = Object.assign(
@@ -212,7 +181,7 @@ export default function ClickableChessboard() {
             to: targetSquare,
             promotion: piece.toLowerCase().charAt(1) ?? 'q',
         });
-        if (move === null) return false; // illegal move
+        if (move === null) return false;
         return true;
     }
 
@@ -223,7 +192,7 @@ export default function ClickableChessboard() {
                 const piece = board[i][j];
                 if (piece && piece.type === 'k' && piece.color === color) {
                     const file = String.fromCharCode(97 + j);
-                    const rank = 8 - i; // Convert 0-7 to 8-1
+                    const rank = 8 - i;
                     return `${file}${rank}` as Square;
                 }
             }
@@ -233,6 +202,7 @@ export default function ClickableChessboard() {
 
     useEffect(() => {
         const newSquares: SquareStyles = {} as SquareStyles;
+        console.log('history:', game.pgn());
 
         if (game.inCheck()) {
             const kingSquare = findKingSquare(game.turn());
@@ -248,15 +218,13 @@ export default function ClickableChessboard() {
     }, [game]);
 
     return (
-        <div className="w-screen lg:w-[1024px] max-w-screen-lg mx-auto">
+        <div className="w-full max-w-screen-lg mx-auto col-span-2">
             <Chessboard
                 position={game.fen()}
                 arePiecesDraggable={true}
                 onPieceDrop={onPieceDrop}
                 onSquareClick={onSquareClick}
-                onSquareRightClick={onSquareRightClick}
                 onPromotionPieceSelect={onPromotionPieceSelect}
-                // customPieces={customPieces}
                 showPromotionDialog={showPromotionDialog}
                 customDropSquareStyle={{
                     boxShadow: 'inset 0 0 1px 6px rgba(100,252,108,0.75)',
