@@ -14,7 +14,11 @@ interface IChessMove {
 
 type SquareStyles = Record<Square, CSSProperties>;
 
-export default function ClickableChessboard() {
+interface IChessBoardInterface {
+    onMoveCompleted(history: string[]): void;
+}
+
+export default function ClickableChessboard(props: IChessBoardInterface) {
     const [game, setGame] = useState<Chess>(new Chess());
     const [moveFrom, setMoveFrom] = useState<Square | ''>('');
     const [moveTo, setMoveTo] = useState<Square | null>(null);
@@ -140,17 +144,6 @@ export default function ClickableChessboard() {
         return true;
     }
 
-    // function onSquareRightClick(square: Square) {
-    //     const color = 'rgba(0, 0, 255, 0.4)';
-    //     setRightClickedSquares((prev) => ({
-    //         ...prev,
-    //         [square]:
-    //             prev[square]?.backgroundColor === color
-    //                 ? undefined
-    //                 : { backgroundColor: color },
-    //     }));
-    // }
-
     function makeADropMove(move: IChessMove) {
         const gameCopy = Object.assign(
             Object.create(Object.getPrototypeOf(game)),
@@ -202,7 +195,7 @@ export default function ClickableChessboard() {
 
     useEffect(() => {
         const newSquares: SquareStyles = {} as SquareStyles;
-        console.log('history:', game.pgn());
+        props.onMoveCompleted(game.history());
 
         if (game.inCheck()) {
             const kingSquare = findKingSquare(game.turn());
