@@ -55,13 +55,17 @@ export default function Page() {
     }, []);
 
     function makeAMove(move: IChessMove) {
-        const gameCopy: Chess = new Chess(game.fen());
+        const gameCopy = Object.assign(
+            Object.create(Object.getPrototypeOf(game)),
+            game
+        );
+
         try {
             const result = gameCopy.move(move);
             setGame(gameCopy);
             return result;
-        } catch (err) {
-            console.warn(err);
+        } catch(err) {
+            console.warn(err)
             return null;
         }
     }
@@ -70,7 +74,7 @@ export default function Page() {
         const move = makeAMove({
             from: sourceSquare,
             to: targetSquare,
-            promotion: piece.toLowerCase() ?? 'q',
+            promotion: piece.toLowerCase().charAt(1) ?? 'q',
         });
         if (move === null) return false; // illegal move
         return true;
