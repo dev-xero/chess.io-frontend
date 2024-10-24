@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface ICenteredGridProps {
+interface ICenteredGridProps { 
     children: React.ReactNode;
 }
 

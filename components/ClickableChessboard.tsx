@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import {
     Piece as ChessPiece,
-    CustomPieces,
+    // CustomPieces,
     PromotionPieceOption,
 } from 'react-chessboard/dist/chessboard/types';
 import { CSSProperties } from 'react';
@@ -27,49 +27,51 @@ export default function ClickableChessboard() {
     const [rightClickedSquares, setRightClickedSquares] = useState<
         Record<Square, { backgroundColor: string } | undefined>
     >({} as Record<Square, { backgroundColor: string } | undefined>);
-    const [moveSquares, setMoveSquares] = useState<SquareStyles>({} as SquareStyles);
+    const [moveSquares, setMoveSquares] = useState<SquareStyles>(
+        {} as SquareStyles
+    );
     const [optionSquares, setOptionSquares] = useState<SquareStyles>(
         {} as SquareStyles
     );
 
-    const pieces: ChessPiece[] = useMemo(
-        () => [
-            'wP',
-            'wN',
-            'wB',
-            'wR',
-            'wQ',
-            'wK',
-            'bP',
-            'bN',
-            'bB',
-            'bR',
-            'bQ',
-            'bK',
-        ],
-        []
-    );
+    // const pieces: ChessPiece[] = useMemo(
+    //     () => [
+    //         'wP',
+    //         'wN',
+    //         'wB',
+    //         'wR',
+    //         'wQ',
+    //         'wK',
+    //         'bP',
+    //         'bN',
+    //         'bB',
+    //         'bR',
+    //         'bQ',
+    //         'bK',
+    //     ],
+    //     []
+    // );
 
-    const customPieces = useMemo(() => {
-        const pieceComponents: CustomPieces = {};
-        pieces.forEach((piece) => {
-            pieceComponents[piece] = ({
-                squareWidth,
-            }: {
-                squareWidth: number;
-            }) => (
-                <div
-                    style={{
-                        width: squareWidth,
-                        height: squareWidth,
-                        backgroundImage: `url(/pieces/${piece}.png)`,
-                        backgroundSize: '100%',
-                    }}
-                />
-            );
-        });
-        return pieceComponents;
-    }, [pieces]);
+    // const customPieces = useMemo(() => {
+    //     const pieceComponents: CustomPieces = {};
+    //     pieces.forEach((piece) => {
+    //         pieceComponents[piece] = ({
+    //             squareWidth,
+    //         }: {
+    //             squareWidth: number;
+    //         }) => (
+    //             <div
+    //                 style={{
+    //                     width: squareWidth,
+    //                     height: squareWidth,
+    //                     backgroundImage: `url(/pieces/${piece}.png)`,
+    //                     backgroundSize: '100%',
+    //                 }}
+    //             />
+    //         );
+    //     });
+    //     return pieceComponents;
+    // }, [pieces]);
 
     // Click Logic
     function getMoveOptions(square: Square) {
@@ -231,7 +233,7 @@ export default function ClickableChessboard() {
 
     useEffect(() => {
         const newSquares: SquareStyles = {} as SquareStyles;
-        
+
         if (game.inCheck()) {
             const kingSquare = findKingSquare(game.turn());
             if (kingSquare) {
@@ -246,7 +248,7 @@ export default function ClickableChessboard() {
     }, [game]);
 
     return (
-        <div className="">
+        <div className="w-screen lg:w-[1024px] max-w-screen-lg mx-auto">
             <Chessboard
                 position={game.fen()}
                 arePiecesDraggable={true}
@@ -254,7 +256,7 @@ export default function ClickableChessboard() {
                 onSquareClick={onSquareClick}
                 onSquareRightClick={onSquareRightClick}
                 onPromotionPieceSelect={onPromotionPieceSelect}
-                customPieces={customPieces}
+                // customPieces={customPieces}
                 showPromotionDialog={showPromotionDialog}
                 customDropSquareStyle={{
                     boxShadow: 'inset 0 0 1px 6px rgba(100,252,108,0.75)',
