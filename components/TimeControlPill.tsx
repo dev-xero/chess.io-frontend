@@ -17,13 +17,13 @@ export default function TimeControlPill(props: ITimeControlPillProps) {
     return (
         <div
             className={clsx(
-                'w-full flex-grow p-4 rounded-md bg-base cursor-pointer transition-all text-xs font-bold text-center',
+                'text-sm w-full flex-grow p-4 border-2 border-base rounded-md bg-base cursor-pointer transition-all font-bold text-center select-none',
                 props.selected == props.variant.control
-                    ? '!bg-primary hover:!bg-primary'
+                    ? '!border-primary !bg-base'
                     : 'bg-base',
                 props.isDisabled
-                    ? 'cursor-default hover:!bg-base'
-                    : 'hover:bg-lighter'
+                    ? 'cursor-default hover:!border-base'
+                    : 'hover:border-lighter'
             )}
             onClick={!props.isDisabled ? props.onClick : () => {}}
         >

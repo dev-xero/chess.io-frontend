@@ -94,7 +94,7 @@ export default function Page() {
                         Create a Challenge
                     </h2>
                     <p className="text-faded">
-                        Let&apos;s generate a unique link for you to play others
+                        We&apos;ll generate a unique game link for you to play others
                         with.
                     </p>
                 </section>
@@ -104,7 +104,7 @@ export default function Page() {
                         TIME CONTROL
                     </h4>
 
-                    <section className="w-[calc(100vw-16px)] max-w-lg md:w-[480px] my-4 flex md:flex-row flex-col gap-2">
+                    <section className="w-[calc(100vw-32px)] max-w-lg md:w-[512px] my-4 flex md:flex-row flex-col gap-2 px-2 sm:px-4">
                         {timeControls.map((tc, idx) => (
                             <TimeControlPill
                                 key={idx}
@@ -115,10 +115,11 @@ export default function Page() {
                             />
                         ))}
                     </section>
+                    <p className="text-center text-sm text-faded mt-8 mb-2">Challengers play White by default.</p>
                 </section>
                 {/* CREATE CHALLENGE BUTTON */}
                 <IconButton
-                    label="Create"
+                    label="Create Game"
                     icon={<ChallengeIcon size={24} />}
                     secondary={false}
                     isDisabled={isPending}
