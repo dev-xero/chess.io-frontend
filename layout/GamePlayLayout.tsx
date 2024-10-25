@@ -37,7 +37,7 @@ export default function GamePlayLayout() {
                 <Header />
             </header>
             <section className="flex flex-col md:grid grid-cols-4 gap-2 mx-auto w-[calc(100%-16px)] py-2 !max-w-[1400px]">
-                <StatsBar />
+                <StatsBar whoseTurn={whoseTurn} />
                 <ClickableChessboard
                     onMoveCompleted={(history) => updateMoveHistory(history)}
                     setWhoseTurn={(color) => setWhoseTurn(color)}
