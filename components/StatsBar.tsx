@@ -66,11 +66,6 @@ export default function StatsBar(props: IStatsBarProps) {
                     timeLimit={blackTimeLeft}
                     onTimeElapsed={() => alert('Black Time Up!')}
                 />
-                {/* DEBUG: <FilledButton
-                    label="Pause"
-                    isDisabled={false}
-                    onClick={() => setIsWhitePaused((prev) => !prev)}
-                /> */}
             </Card>
         </aside>
     );
