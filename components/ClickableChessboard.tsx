@@ -13,6 +13,7 @@ const INITIAL_SQUARE_STYLES: CustomSquareStyles = {};
 interface IChessBoardInterface {
     onMoveCompleted(history: string[]): void;
     setWhoseTurn(color: 'w' | 'b'): void;
+    playerColor: 'w' | 'b';
 }
 
 interface SquareState {
@@ -37,44 +38,6 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
         rightClickedSquares: INITIAL_SQUARE_STYLES,
     });
 
-    const getMoveOptions = useCallback((square: Square) => {
-        const game = gameRef.current;
-        const moves = game.moves({ square, verbose: true });
-
-        if (moves.length === 0) {
-            setSquareStyles((prev) => ({
-                ...prev,
-                optionSquares: {},
-            }));
-            return false;
-        }
-
-        const newSquares: CustomSquareStyles = {};
-        moves.forEach((move: Move) => {
-            const targetPiece = game.get(move.to as Square);
-            const isCapture =
-                targetPiece && targetPiece.color !== game.get(square)?.color;
-
-            newSquares[move.to] = {
-                background: isCapture
-                    ? 'rgba(252,181,100,0.75)'
-                    : 'radial-gradient(circle, rgba(0,0,0,.2) 20%, transparent 20%)',
-                borderRadius: isCapture ? '0' : '50',
-            };
-        });
-
-        newSquares[square] = {
-            background: 'rgba(100,252,108,0.75)',
-        };
-
-        setSquareStyles((prev) => ({
-            ...prev,
-            optionSquares: newSquares,
-        }));
-
-        return true;
-    }, []);
-
     const findKingSquare = useCallback((color: 'w' | 'b'): Square | null => {
         const board = gameRef.current.board();
         for (let i = 0; i < 8; i++) {
@@ -87,6 +50,56 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
         }
         return null;
     }, []);
+
+    const isPlayersTurn = useCallback(() => {
+        return gameRef.current.turn() === props.playerColor;
+    }, [props.playerColor]);
+
+    const getMoveOptions = useCallback(
+        (square: Square) => {
+            if (!isPlayersTurn()) {
+                return false;
+            }
+
+            const game = gameRef.current;
+            const moves = game.moves({ square, verbose: true });
+
+            if (moves.length === 0) {
+                setSquareStyles((prev) => ({
+                    ...prev,
+                    optionSquares: {},
+                }));
+                return false;
+            }
+
+            const newSquares: CustomSquareStyles = {};
+            moves.forEach((move: Move) => {
+                const targetPiece = game.get(move.to as Square);
+                const isCapture =
+                    targetPiece &&
+                    targetPiece.color !== game.get(square)?.color;
+
+                newSquares[move.to] = {
+                    background: isCapture
+                        ? 'rgba(252,181,100,0.75)'
+                        : 'radial-gradient(circle, rgba(0,0,0,.2) 20%, transparent 20%)',
+                    borderRadius: isCapture ? '0' : '50',
+                };
+            });
+
+            newSquares[square] = {
+                background: 'rgba(100,252,108,0.75)',
+            };
+
+            setSquareStyles((prev) => ({
+                ...prev,
+                optionSquares: newSquares,
+            }));
+
+            return true;
+        },
+        [isPlayersTurn]
+    );
 
     const makeMove = useCallback(
         (from: Square, to: Square, promotion?: PieceSymbol) => {
@@ -129,6 +142,10 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
 
     const onSquareClick = useCallback(
         (square: Square) => {
+            if (!isPlayersTurn()) {
+                return;
+            }
+
             const game = gameRef.current;
             setSquareStyles((prev) => ({
                 ...prev,
@@ -185,7 +202,14 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
                 }
             }
         },
-        [moveFrom, moveTo, getMoveOptions, makeMove]
+        [
+            moveFrom,
+            moveTo,
+            getMoveOptions,
+            makeMove,
+            props.playerColor,
+            isPlayersTurn,
+        ]
     );
 
     const onPromotionPieceSelect = useCallback(
@@ -211,13 +235,20 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
 
     const onPieceDrop = useCallback(
         (sourceSquare: string, targetSquare: string, piece: string) => {
+            if (
+                !isPlayersTurn() ||
+                piece.charAt(0).toLowerCase() !== props.playerColor
+            ) {
+                return false;
+            }
+
             return makeMove(
                 sourceSquare as Square,
                 targetSquare as Square,
                 piece.toLowerCase().charAt(1) as PieceSymbol
             );
         },
-        [makeMove]
+        [makeMove, props.playerColor, isPlayersTurn]
     );
 
     return (
@@ -225,7 +256,7 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
             <Chessboard
                 position={boardPosition}
                 animationDuration={200}
-                arePiecesDraggable={true}
+                arePiecesDraggable={isPlayersTurn()}
                 onPieceDrop={onPieceDrop}
                 onSquareClick={onSquareClick}
                 onPromotionPieceSelect={onPromotionPieceSelect}

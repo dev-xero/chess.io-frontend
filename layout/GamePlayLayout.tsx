@@ -7,6 +7,7 @@ import GameStatsBar from '@/components/GameStatsBar';
 import { useState } from 'react';
 
 export default function GamePlayLayout() {
+    const playerColor = 'w';
     const [movePairs, setMovePairs] = useState<string[][]>([]);
     const [moveCount, setMoveCount] = useState(0);
     const [whoseTurn, setWhoseTurn] = useState<'w' | 'b'>('w');
@@ -39,6 +40,7 @@ export default function GamePlayLayout() {
             <section className="flex flex-col md:grid grid-cols-4 gap-2 mx-auto w-[calc(100%-16px)] py-2 !max-w-[1400px]">
                 <GameStatsBar whoseTurn={whoseTurn} />
                 <ClickableChessboard
+                    playerColor={playerColor}
                     onMoveCompleted={(history) => updateMoveHistory(history)}
                     setWhoseTurn={(color) => setWhoseTurn(color)}
                 />
