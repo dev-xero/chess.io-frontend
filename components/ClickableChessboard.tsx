@@ -49,7 +49,7 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
                 targetPiece && targetPiece.color !== game.get(square)?.color;
             newSquares[move.to] = {
                 background: isCapture
-                    ? 'rgba(100,252,108,0.75)'
+                    ? 'rgba(252,181,100,0.75)'
                     : 'radial-gradient(circle, rgba(0,0,0,.1) 20%, transparent 20%)',
                 borderRadius: isCapture ? '0%' : '50%',
             };
