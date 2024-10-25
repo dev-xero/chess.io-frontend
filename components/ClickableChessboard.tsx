@@ -1,119 +1,144 @@
 'use client';
 
 import { Chess, Square, Move, PieceSymbol } from 'chess.js';
-import { useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { PromotionPieceOption } from 'react-chessboard/dist/chessboard/types';
-import { CSSProperties } from 'react';
 
-interface IChessMove {
-    from: string;
-    to: string;
-    promotion?: string;
-}
+type ChessSquareStyle = Record<string, string | number>;
+type CustomSquareStyles = Record<string, ChessSquareStyle>;
 
-type SquareStyles = Record<Square, CSSProperties>;
+const INITIAL_SQUARE_STYLES: CustomSquareStyles = {};
 
 interface IChessBoardInterface {
     onMoveCompleted(history: string[]): void;
     setWhoseTurn(color: 'w' | 'b'): void;
 }
 
+interface SquareState {
+    moveSquares: CustomSquareStyles;
+    optionSquares: CustomSquareStyles;
+    rightClickedSquares: CustomSquareStyles;
+}
+
 export default function ClickableChessboard(props: IChessBoardInterface) {
-    const [game, setGame] = useState<Chess>(new Chess());
+    const gameRef = useRef<Chess>(new Chess());
     const [moveFrom, setMoveFrom] = useState<Square | ''>('');
     const [moveTo, setMoveTo] = useState<Square | null>(null);
     const [showPromotionDialog, setShowPromotionDialog] =
         useState<boolean>(false);
-    const [rightClickedSquares, setRightClickedSquares] = useState<
-        Record<Square, { backgroundColor: string } | undefined>
-    >({} as Record<Square, { backgroundColor: string } | undefined>);
-    const [moveSquares, setMoveSquares] = useState<SquareStyles>(
-        {} as SquareStyles
-    );
-    const [optionSquares, setOptionSquares] = useState<SquareStyles>(
-        {} as SquareStyles
+    const [boardPosition, setBoardPosition] = useState<string>(
+        gameRef.current.fen()
     );
 
-    function getMoveOptions(square: Square) {
+    const [squareStyles, setSquareStyles] = useState<SquareState>({
+        moveSquares: INITIAL_SQUARE_STYLES,
+        optionSquares: INITIAL_SQUARE_STYLES,
+        rightClickedSquares: INITIAL_SQUARE_STYLES,
+    });
+
+    const getMoveOptions = useCallback((square: Square) => {
+        const game = gameRef.current;
         const moves = game.moves({ square, verbose: true });
+
         if (moves.length === 0) {
-            setOptionSquares({} as SquareStyles);
+            setSquareStyles((prev) => ({
+                ...prev,
+                optionSquares: {},
+            }));
             return false;
         }
 
-        const newSquares: SquareStyles = {} as SquareStyles;
+        const newSquares: CustomSquareStyles = {};
         moves.forEach((move: Move) => {
             const targetPiece = game.get(move.to as Square);
             const isCapture =
                 targetPiece && targetPiece.color !== game.get(square)?.color;
+
             newSquares[move.to] = {
                 background: isCapture
                     ? 'rgba(252,181,100,0.75)'
                     : 'radial-gradient(circle, rgba(0,0,0,.2) 20%, transparent 20%)',
-                borderRadius: isCapture ? '0%' : '50%',
+                borderRadius: isCapture ? '0' : '50',
             };
         });
+
         newSquares[square] = {
             background: 'rgba(100,252,108,0.75)',
         };
-        setOptionSquares(newSquares);
+
+        setSquareStyles((prev) => ({
+            ...prev,
+            optionSquares: newSquares,
+        }));
+
         return true;
-    }
+    }, []);
 
-    function onSquareClick(square: Square) {
-        setRightClickedSquares(
-            {} as Record<Square, { backgroundColor: string } | undefined>
-        );
-
-        const piece = game.get(square as Square);
-        const isCurrentTurnPiece = piece && piece.color === game.turn();
-
-        if (!moveFrom) {
-            if (isCurrentTurnPiece) {
-                const hasMoveOptions = getMoveOptions(square);
-                if (hasMoveOptions) setMoveFrom(square);
-            }
-            return;
-        }
-
-        if (!moveTo) {
-            const moves = game.moves({ square: moveFrom, verbose: true });
-            const foundMove = moves.find(
-                (m) => m.from === moveFrom && m.to === square
-            );
-
-            if (!foundMove) {
-                if (isCurrentTurnPiece) {
-                    const hasMoveOptions = getMoveOptions(square);
-                    setMoveFrom(hasMoveOptions ? square : '');
+    const findKingSquare = useCallback((color: 'w' | 'b'): Square | null => {
+        const board = gameRef.current.board();
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                const piece = board[i][j];
+                if (piece && piece.type === 'k' && piece.color === color) {
+                    return `${String.fromCharCode(97 + j)}${8 - i}` as Square;
                 }
-                return;
             }
+        }
+        return null;
+    }, []);
 
-            setMoveTo(square);
+    const makeMove = useCallback(
+        (from: Square, to: Square, promotion?: PieceSymbol) => {
+            const game = gameRef.current;
+            try {
+                const move = game.move({ from, to, promotion });
+                if (move) {
+                    setBoardPosition(game.fen());
+                    props.onMoveCompleted(game.history());
+                    props.setWhoseTurn(game.turn());
 
-            if (
-                foundMove &&
-                ((foundMove.color === 'w' &&
-                    foundMove.piece === 'p' &&
-                    square[1] === '8') ||
-                    (foundMove.color === 'b' &&
-                        foundMove.piece === 'p' &&
-                        square[1] === '1'))
-            ) {
-                setShowPromotionDialog(true);
-                return;
+                    // Update king in check highlight
+                    if (game.inCheck()) {
+                        const kingSquare = findKingSquare(game.turn());
+                        if (kingSquare) {
+                            const newMoveSquares = { ...INITIAL_SQUARE_STYLES };
+                            newMoveSquares[kingSquare] = {
+                                backgroundColor: 'rgba(255, 0, 0, 0.4)',
+                            };
+                            setSquareStyles((prev) => ({
+                                ...prev,
+                                moveSquares: newMoveSquares,
+                            }));
+                        }
+                    } else {
+                        setSquareStyles((prev) => ({
+                            ...prev,
+                            moveSquares: { ...INITIAL_SQUARE_STYLES },
+                        }));
+                    }
+                    return true;
+                }
+            } catch (err) {
+                console.warn(err);
             }
+            return false;
+        },
+        [props, findKingSquare]
+    );
 
-            const gameCopy = new Chess(game.fen());
-            const move = gameCopy.move({
-                from: moveFrom,
-                to: square,
-                promotion: 'q',
-            });
+    const onSquareClick = useCallback(
+        (square: Square) => {
+            const game = gameRef.current;
+            setSquareStyles((prev) => ({
+                ...prev,
+                rightClickedSquares: { ...INITIAL_SQUARE_STYLES },
+            }));
 
-            if (move === null) {
+            const piece = game.get(square);
+            const isCurrentTurnPiece = piece && piece.color === game.turn();
+
+            if (!moveFrom) {
                 if (isCurrentTurnPiece) {
                     const hasMoveOptions = getMoveOptions(square);
                     if (hasMoveOptions) setMoveFrom(square);
@@ -121,101 +146,84 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
                 return;
             }
 
-            setGame(gameCopy);
-            setMoveFrom('');
-            setMoveTo(null);
-            setOptionSquares({} as SquareStyles);
-        }
-    }
+            if (!moveTo) {
+                const moves = game.moves({ square: moveFrom, verbose: true });
+                const foundMove = moves.find(
+                    (m) => m.from === moveFrom && m.to === square
+                );
 
-    function onPromotionPieceSelect(piece?: PromotionPieceOption) {
-        if (piece && moveFrom && moveTo) {
-            const gameCopy = new Chess(game.fen());
-            gameCopy.move({
-                from: moveFrom,
-                to: moveTo,
-                promotion: piece[1].toLowerCase() as PieceSymbol,
-            });
-            setGame(gameCopy);
-        }
-        setMoveFrom('');
-        setMoveTo(null);
-        setShowPromotionDialog(false);
-        setOptionSquares({} as SquareStyles);
-        return true;
-    }
+                if (!foundMove) {
+                    if (isCurrentTurnPiece) {
+                        const hasMoveOptions = getMoveOptions(square);
+                        setMoveFrom(hasMoveOptions ? square : '');
+                    }
+                    return;
+                }
 
-    function makeADropMove(move: IChessMove) {
-        const gameCopy = Object.assign(
-            Object.create(Object.getPrototypeOf(game)),
-            game
-        );
+                setMoveTo(square);
 
-        try {
-            const result = gameCopy.move(move);
-            setGame(gameCopy);
-            return result;
-        } catch (err) {
-            console.warn(err);
-            return null;
-        } finally {
-            setMoveFrom('');
-            setMoveTo(null);
-            setOptionSquares({} as SquareStyles);
-        }
-    }
+                if (
+                    foundMove &&
+                    ((foundMove.color === 'w' &&
+                        foundMove.piece === 'p' &&
+                        square[1] === '8') ||
+                        (foundMove.color === 'b' &&
+                            foundMove.piece === 'p' &&
+                            square[1] === '1'))
+                ) {
+                    setShowPromotionDialog(true);
+                    return;
+                }
 
-    function onPieceDrop(
-        sourceSquare: string,
-        targetSquare: string,
-        piece: string
-    ) {
-        const move = makeADropMove({
-            from: sourceSquare,
-            to: targetSquare,
-            promotion: piece.toLowerCase().charAt(1) ?? 'q',
-        });
-        if (move === null) return false;
-        return true;
-    }
-
-    const findKingSquare = (color: 'w' | 'b'): Square | null => {
-        const board = game.board();
-        for (let i = 0; i < 8; i++) {
-            for (let j = 0; j < 8; j++) {
-                const piece = board[i][j];
-                if (piece && piece.type === 'k' && piece.color === color) {
-                    const file = String.fromCharCode(97 + j);
-                    const rank = 8 - i;
-                    return `${file}${rank}` as Square;
+                if (makeMove(moveFrom, square)) {
+                    setMoveFrom('');
+                    setMoveTo(null);
+                    setSquareStyles((prev) => ({
+                        ...prev,
+                        optionSquares: { ...INITIAL_SQUARE_STYLES },
+                    }));
                 }
             }
-        }
-        return null;
-    };
+        },
+        [moveFrom, moveTo, getMoveOptions, makeMove]
+    );
 
-    useEffect(() => {
-        const newSquares: SquareStyles = {} as SquareStyles;
-        props.onMoveCompleted(game.history());
-        props.setWhoseTurn(game.turn());
-
-        if (game.inCheck()) {
-            const kingSquare = findKingSquare(game.turn());
-            if (kingSquare) {
-                newSquares[kingSquare] = {
-                    backgroundColor: 'rgba(255, 0, 0, 0.4)',
-                };
-                setMoveSquares(newSquares);
+    const onPromotionPieceSelect = useCallback(
+        (piece?: PromotionPieceOption) => {
+            if (piece && moveFrom && moveTo) {
+                makeMove(
+                    moveFrom,
+                    moveTo,
+                    piece[1].toLowerCase() as PieceSymbol
+                );
             }
-        } else {
-            setMoveSquares({} as SquareStyles);
-        }
-    }, [game]);
+            setMoveFrom('');
+            setMoveTo(null);
+            setShowPromotionDialog(false);
+            setSquareStyles((prev) => ({
+                ...prev,
+                optionSquares: { ...INITIAL_SQUARE_STYLES },
+            }));
+            return true;
+        },
+        [moveFrom, moveTo, makeMove]
+    );
+
+    const onPieceDrop = useCallback(
+        (sourceSquare: string, targetSquare: string, piece: string) => {
+            return makeMove(
+                sourceSquare as Square,
+                targetSquare as Square,
+                piece.toLowerCase().charAt(1) as PieceSymbol
+            );
+        },
+        [makeMove]
+    );
 
     return (
         <div className="w-full max-w-screen-lg mx-auto col-span-2 order-1 md:order-2">
             <Chessboard
-                position={game.fen()}
+                position={boardPosition}
                 animationDuration={200}
                 arePiecesDraggable={true}
                 onPieceDrop={onPieceDrop}
@@ -225,16 +233,12 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
                 customDropSquareStyle={{
                     boxShadow: 'inset 0 0 1px 6px rgba(100,252,108,0.75)',
                 }}
-                customDarkSquareStyle={{
-                    backgroundColor: '#485A75',
-                }}
-                customLightSquareStyle={{
-                    backgroundColor: '#ADC0DC',
-                }}
+                customDarkSquareStyle={{ backgroundColor: '#485A75' }}
+                customLightSquareStyle={{ backgroundColor: '#ADC0DC' }}
                 customSquareStyles={{
-                    ...moveSquares,
-                    ...optionSquares,
-                    ...rightClickedSquares,
+                    ...(squareStyles.moveSquares as CustomSquareStyles),
+                    ...(squareStyles.optionSquares as CustomSquareStyles),
+                    ...(squareStyles.rightClickedSquares as CustomSquareStyles),
                 }}
                 promotionToSquare={moveTo}
             />
