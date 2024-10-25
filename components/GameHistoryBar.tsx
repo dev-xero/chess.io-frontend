@@ -11,7 +11,7 @@ export default function GameHistoryBar(props: IGameHistoryBar) {
     <aside className="col-span-1 order-3">
             <section className=" bg-base rounded-md p-2">
                 <h3 className="text-lg font-bold text-center">Move History</h3>
-                <ul className="flex md:flex-col gap-2 md:h-[400px] max-h-[400px] overflow-x-auto md:overflow-y-auto py-2">
+                <ul className="flex md:flex-col gap-2 md:h-[360px] max-h-[360px] overflow-x-auto md:overflow-y-auto py-2">
                     {props.moveHistoryPairs.length > 0 ? (
                         props.moveHistoryPairs.map((movePair, idx) => {
                             return (

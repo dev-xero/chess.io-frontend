@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 
 interface IChessClockProps {
@@ -9,6 +10,7 @@ interface IChessClockProps {
 
 export default function ChessClock(props: IChessClockProps) {
     const [timeInMillis, setTimeInMillis] = useState(props.timeLimit * 1000);
+    const [isClient, setIsClient] = useState(false);
     const lastTickRef = useRef<number | null>(null);
 
     const formatTime = (ms: number) => {
@@ -16,8 +18,14 @@ export default function ChessClock(props: IChessClockProps) {
         const seconds = Math.floor((ms % (60 * 1000)) / 1000);
         const milliseconds = Math.floor((ms % 1000) / 100);
 
-        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds}`;
+        return `${minutes.toString().padStart(2, '0')}:${seconds
+            .toString()
+            .padStart(2, '0')}.${milliseconds}`;
     };
+
+    useEffect(() => {
+        setIsClient(true);
+    }, [])
 
     // accurate to the nearest 100th of a millisecond
     useEffect(() => {
@@ -49,12 +57,23 @@ export default function ChessClock(props: IChessClockProps) {
         } else {
             lastTickRef.current = null;
         }
-    }, [props.shouldPause]);
+    }, [props.shouldPause, isClient]);
+
+    const timeDisplay = isClient ? formatTime(timeInMillis) : formatTime(props.timeLimit * 1000);
 
     return (
-        <section className="w-full p-2 rounded-md font-bold text-2xl">
-            <p className="font-bold text-xs text-faded mb-1">{props.label.toUpperCase()}</p>
-            <h2 className="text-3xl">{formatTime(timeInMillis)}</h2>
+        <section className="w-full py-2 rounded-md font-bold text-2xl">
+            <p className="font-bold text-xs text-faded mb-1">
+                {props.label.toUpperCase()}
+            </p>
+            <h2
+                className={clsx(
+                    'text-3xl transition-all',
+                    props.shouldPause ? 'opacity-60' : 'opacity-100'
+                )}
+            >
+                {timeDisplay}
+            </h2>
         </section>
     );
 }

@@ -3,7 +3,7 @@
 import ClickableChessboard from '@/components/ClickableChessboard';
 import GameHistoryBar from '@/components/GameHistoryBar';
 import Header from '@/components/Header';
-import StatsBar from '@/components/StatsBar';
+import GameStatsBar from '@/components/GameStatsBar';
 import { useState } from 'react';
 
 export default function GamePlayLayout() {
@@ -37,7 +37,7 @@ export default function GamePlayLayout() {
                 <Header />
             </header>
             <section className="flex flex-col md:grid grid-cols-4 gap-2 mx-auto w-[calc(100%-16px)] py-2 !max-w-[1400px]">
-                <StatsBar whoseTurn={whoseTurn} />
+                <GameStatsBar whoseTurn={whoseTurn} />
                 <ClickableChessboard
                     onMoveCompleted={(history) => updateMoveHistory(history)}
                     setWhoseTurn={(color) => setWhoseTurn(color)}

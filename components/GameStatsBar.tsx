@@ -1,14 +1,21 @@
-import { Asterisk, Clock, Lightning, Timer } from '@phosphor-icons/react';
+import {
+    Asterisk,
+    Clock,
+    FlagBannerFold,
+    Handshake,
+    Lightning,
+    Timer,
+} from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 import ChessClock from './ChessClock';
 
 type Game = 'Rapid' | 'Blitz' | 'Bullet';
 
-interface IStatsBarProps {
+interface IGameStatsBarProps {
     whoseTurn: 'w' | 'b';
 }
 
-export default function StatsBar(props: IStatsBarProps) {
+export default function GameStatsBar(props: IGameStatsBarProps) {
     // Later, store the game object in local storage, it should contain:
     /**
      * 1. Game type
@@ -21,7 +28,7 @@ export default function StatsBar(props: IStatsBarProps) {
     const timeLimit = 10;
     const whitePlayerName = 'algoXero';
     const blackPlayerName = 'halflife';
-    const whiteTimeLeft = 400;
+    const whiteTimeLeft = 600;
     const blackTimeLeft = 600;
 
     const [isWhitePaused, setIsWhitePaused] = useState(props.whoseTurn == 'b');
@@ -53,7 +60,9 @@ export default function StatsBar(props: IStatsBarProps) {
                 </p>
             </Card>
             <Card>
-                <h3 className="w-full text-xs font-bold text-faded mb-2 text-center">CLOCK</h3>
+                <h3 className="w-full text-xs font-bold text-faded mb-2 text-center">
+                    CLOCK
+                </h3>
                 <ChessClock
                     label={whitePlayerName}
                     shouldPause={isWhitePaused}
@@ -66,6 +75,25 @@ export default function StatsBar(props: IStatsBarProps) {
                     timeLimit={blackTimeLeft}
                     onTimeElapsed={() => alert('Black Time Up!')}
                 />
+            </Card>
+            <Card>
+                <h3 className="w-full text-xs font-bold text-faded mb-2 text-center">
+                    ACTIONS
+                </h3>
+                <p
+                    onClick={() => {}}
+                    className="w-full flex items-center gap-2 cursor-pointer hover:underline underline-offset-4 mb-2 text-faded hover:text-foreground transition-all"
+                >
+                    <FlagBannerFold size={18} weight="fill" />
+                    <span>Resign</span>
+                </p>
+                <p
+                    onClick={() => {}}
+                    className="w-full flex items-center gap-2 cursor-pointer hover:underline underline-offset-4 mb-2 text-faded hover:text-foreground transition-all"
+                >
+                    <Handshake size={18} weight="fill" />
+                    <span>Draw</span>
+                </p>
             </Card>
         </aside>
     );
