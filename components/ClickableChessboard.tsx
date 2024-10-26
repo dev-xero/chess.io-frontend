@@ -35,18 +35,20 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
         useState<boolean>(false);
     const [boardPosition, setBoardPosition] = useState<string>(props.fen);
 
-    useEffect(() => {
-        console.log('New FEN received:', props.fen);
-        const newGame = new Chess(props.fen);
-        setGameInstance(newGame);
-        setBoardPosition(props.fen);
-    }, [props.fen]);
-
     const [squareStyles, setSquareStyles] = useState<SquareState>({
         moveSquares: INITIAL_SQUARE_STYLES,
         optionSquares: INITIAL_SQUARE_STYLES,
         rightClickedSquares: INITIAL_SQUARE_STYLES,
     });
+
+    useEffect(() => {
+        console.log('New FEN received:', props.fen);
+        const newGame = new Chess(props.fen);
+
+        updateCheckHighlights(newGame);
+        setGameInstance(newGame);
+        setBoardPosition(props.fen);
+    }, [props.fen]);
 
     const findKingSquare = useCallback(
         (color: 'w' | 'b'): Square | null => {
@@ -64,6 +66,27 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
             return null;
         },
         [gameInstance]
+    );
+
+    const updateCheckHighlights = useCallback(
+        (game: Chess) => {
+            const newMoveSquares = { ...INITIAL_SQUARE_STYLES };
+
+            if (game.isCheck()) {
+                const kingSquare = findKingSquare(game.turn());
+                if (kingSquare) {
+                    newMoveSquares[kingSquare] = {
+                        backgroundColor: 'rgba(255, 0, 0, 0.4)',
+                    };
+                }
+            }
+
+            setSquareStyles((prev) => ({
+                ...prev,
+                moveSquares: newMoveSquares,
+            }));
+        },
+        [findKingSquare]
     );
 
     const isPlayersTurn = useCallback(() => {
@@ -115,38 +138,18 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
         [isPlayersTurn, gameInstance]
     );
 
-    // props.setFen((fen: string) => gameRef.current.load(fen));
-
     const makeMove = useCallback(
         (from: Square, to: Square, promotion?: PieceSymbol) => {
             const game = gameInstance;
             try {
                 const move = game.move({ from, to, promotion });
                 if (move) {
-                    setBoardPosition(game.fen());
-                    props.onMoveCompleted(game.history());
+                    const newFen = game.fen();
+                    setBoardPosition(newFen);
+                    updateCheckHighlights(game);
+
                     props.setWhoseTurn(game.turn());
-
-                    // Update king in check highlight
-                    if (game.inCheck()) {
-                        const kingSquare = findKingSquare(game.turn());
-                        if (kingSquare) {
-                            const newMoveSquares = { ...INITIAL_SQUARE_STYLES };
-                            newMoveSquares[kingSquare] = {
-                                backgroundColor: 'rgba(255, 0, 0, 0.4)',
-                            };
-                            setSquareStyles((prev) => ({
-                                ...prev,
-                                moveSquares: newMoveSquares,
-                            }));
-                        }
-                    } else {
-                        setSquareStyles((prev) => ({
-                            ...prev,
-                            moveSquares: { ...INITIAL_SQUARE_STYLES },
-                        }));
-                    }
-
+                    props.onMoveCompleted(game.history());
                     props.onMoveComplete({
                         from,
                         to,
@@ -160,7 +163,7 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
             }
             return false;
         },
-        [props, findKingSquare, gameInstance]
+        [props, findKingSquare, updateCheckHighlights, gameInstance]
     );
 
     const onSquareClick = useCallback(
@@ -232,6 +235,7 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
             makeMove,
             props.playerColor,
             isPlayersTurn,
+            gameInstance,
         ]
     );
 
