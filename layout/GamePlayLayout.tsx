@@ -23,14 +23,16 @@ interface WSStartMessage {
 }
 
 interface WSGameMessage {
-    state: string;
+    duration: number;
     whitePlayer: string;
     blackPlayer: string;
+    state: string;
 }
 
 interface WSMoveMessage {
     type: string;
     state: ChessState;
+    duration: number;
 }
 
 interface PlayerInfo {
@@ -52,11 +54,12 @@ export default function GamePlayLayout() {
             shouldReconnect: () => true,
         });
 
+    const [doneTimeSetup, setDoneTimeSetup] = useState(false);
     const [playerColor, setPlayerColor] = useState<string | null>(null);
     const [whoseTurn, setWhoseTurn] = useState<'w' | 'b'>('w');
     const [gameTime, setGameTime] = useState({
-        white: 0,
-        black: 0,
+        white: 600,
+        black: 600,
         isWhitePaused: true,
         isBlackPaused: true,
     });
@@ -66,13 +69,14 @@ export default function GamePlayLayout() {
     const [moveCount, setMoveCount] = useState(0);
 
     useEffect(() => {
-        if (game) {
+        if (game && game.duration && !doneTimeSetup) {
             setGameTime({
-                white: game.state.whiteTTP,
-                black: game.state.blackTTP,
+                white: game.duration,
+                black: game.duration,
                 isWhitePaused: whoseTurn === 'b',
                 isBlackPaused: whoseTurn === 'w',
             });
+            setDoneTimeSetup(true);
         }
     }, [game, whoseTurn]);
 
@@ -159,18 +163,31 @@ export default function GamePlayLayout() {
                     whitePlayer: JSON.parse(game.whitePlayer) as Player,
                     blackPlayer: JSON.parse(game.blackPlayer) as Player,
                     state: JSON.parse(game.state),
+                    duration: game.duration,
                 };
 
-                console.log('game:', parsedGame);
+                console.log('game duration:', parsedGame.duration);
+
+                // console.log('game:', parsedGame);
 
                 setPlayerColor(
                     parsedGame.whitePlayer.username == playerInfo.username
                         ? 'w'
                         : 'b'
                 );
+
+                setWhoseTurn(parsedGame.state.turn);
+                setGameTime((prevTime) => ({
+                    ...prevTime,
+                    white: parsedGame.duration,
+                    black: parsedGame.duration,
+                    isWhitePaused: parsedGame.state.turn === 'b',
+                    isBlackPaused: parsedGame.state.turn === 'w',
+                }));
                 setFen(parsedGame.state.fen);
                 setGame(parsedGame);
-                setWhoseTurn(parsedGame.state.turn);
+                
+                console.log('updated game time.');
                 setIsReady(true);
             } else if (
                 socketMessage.type == 'move' ||
@@ -179,6 +196,7 @@ export default function GamePlayLayout() {
                 const moveMsg = lastJsonMessage as WSMoveMessage;
                 // forcing this assertion could be dangerous...
                 const newGameState: ChessGame = {
+                    duration: moveMsg.duration,
                     whitePlayer: game!.whitePlayer,
                     blackPlayer: game!.blackPlayer,
                     state: moveMsg.state,
@@ -186,9 +204,16 @@ export default function GamePlayLayout() {
 
                 console.log('new state', newGameState);
 
-                setGame(newGameState);
-                setFen(newGameState.state.fen);
                 setWhoseTurn(newGameState.state.turn);
+                setGameTime((prevTime) => ({
+                    ...prevTime,
+                    white: moveMsg.state.whiteTTP,
+                    black: moveMsg.state.blackTTP,
+                    isWhitePaused: moveMsg.state.turn === 'b',
+                    isBlackPaused: moveMsg.state.turn === 'w',
+                }));
+                setFen(newGameState.state.fen);
+                setGame(newGameState);
             }
         }
     }, [lastMessage, lastJsonMessage]);
@@ -231,7 +256,13 @@ export default function GamePlayLayout() {
 
     return (
         <>
-            {!playerInfo || !isReady || !game || !fen || !playerColor ? (
+            {!playerInfo ||
+            !isReady ||
+            !game ||
+            !fen ||
+            !playerColor ||
+            isNaN(gameTime.white) ||
+            isNaN(gameTime.black) ? (
                 <></>
             ) : (
                 <>

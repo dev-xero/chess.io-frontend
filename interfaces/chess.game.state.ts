@@ -32,6 +32,7 @@ export interface BoardMove {
 }
 
 export default interface ChessGame {
+    duration: number;
     whitePlayer: Player;
     blackPlayer: Player;
     state: ChessState;

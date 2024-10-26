@@ -49,7 +49,12 @@ export default function GameStatsBar(props: IGameStatsBarProps) {
                 </h3>
                 <p className="flex gap-2 mt-2 text-faded items-center">
                     <Clock size={18} weight="fill" />
-                    {props.duration / 60}mins
+                    {props.gameType == 'Rapid'
+                        ? '10'
+                        : props.gameType == 'Blitz'
+                        ? '5'
+                        : '3'}{' '}
+                    mins
                 </p>
             </Card>
             <Card>

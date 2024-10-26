@@ -13,14 +13,16 @@ interface IChessClockProps {
 export default function ChessClock(props: IChessClockProps) {
     const [isClient, setIsClient] = useState(false);
     const lastTickRef = useRef<number | null>(null);
-    
+
     const formatTime = (ms: number) => {
-        const minutes = Math.floor(ms / (60 * 1000));
-        const seconds = Math.floor((ms % (60 * 1000)) / 1000);
-        const milliseconds = Math.floor((ms % 1000) / 100);
-        return `${minutes.toString().padStart(2, '0')}:${seconds
+        const totalSeconds = Math.floor(ms / 1000);
+        const seconds = totalSeconds % 60;
+        const totalMinutes = Math.floor(totalSeconds / 60);
+        const decisecond = Math.floor((ms % 1000) / 100);
+
+        return `${totalMinutes}:${seconds
             .toString()
-            .padStart(2, '0')}.${milliseconds}`;
+            .padStart(2, '0')}.${decisecond}`;
     };
 
     useEffect(() => {
@@ -37,7 +39,7 @@ export default function ChessClock(props: IChessClockProps) {
                     ? now - lastTickRef.current
                     : 100;
                 lastTickRef.current = now;
-                
+
                 const newTimeInMillis = props.currentTime - elapsed;
                 if (newTimeInMillis <= 0) {
                     props.onTimeElapsed();
