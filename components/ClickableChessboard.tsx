@@ -1,7 +1,8 @@
 'use client';
 
+import { BoardMove } from '@/interfaces/chess.game.state';
 import { Chess, Square, Move, PieceSymbol } from 'chess.js';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { PromotionPieceOption } from 'react-chessboard/dist/chessboard/types';
 
@@ -11,9 +12,11 @@ type CustomSquareStyles = Record<string, ChessSquareStyle>;
 const INITIAL_SQUARE_STYLES: CustomSquareStyles = {};
 
 interface IChessBoardInterface {
+    fen: string;
     onMoveCompleted(history: string[]): void;
     setWhoseTurn(color: 'w' | 'b'): void;
-    playerColor: 'w' | 'b';
+    playerColor: string;
+    onMoveComplete(move: BoardMove): void;
 }
 
 interface SquareState {
@@ -23,14 +26,21 @@ interface SquareState {
 }
 
 export default function ClickableChessboard(props: IChessBoardInterface) {
-    const gameRef = useRef<Chess>(new Chess());
+    const [gameInstance, setGameInstance] = useState<Chess>(
+        new Chess(props.fen)
+    );
     const [moveFrom, setMoveFrom] = useState<Square | ''>('');
     const [moveTo, setMoveTo] = useState<Square | null>(null);
     const [showPromotionDialog, setShowPromotionDialog] =
         useState<boolean>(false);
-    const [boardPosition, setBoardPosition] = useState<string>(
-        gameRef.current.fen()
-    );
+    const [boardPosition, setBoardPosition] = useState<string>(props.fen);
+
+    useEffect(() => {
+        console.log('New FEN received:', props.fen);
+        const newGame = new Chess(props.fen);
+        setGameInstance(newGame);
+        setBoardPosition(props.fen);
+    }, [props.fen]);
 
     const [squareStyles, setSquareStyles] = useState<SquareState>({
         moveSquares: INITIAL_SQUARE_STYLES,
@@ -38,22 +48,27 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
         rightClickedSquares: INITIAL_SQUARE_STYLES,
     });
 
-    const findKingSquare = useCallback((color: 'w' | 'b'): Square | null => {
-        const board = gameRef.current.board();
-        for (let i = 0; i < 8; i++) {
-            for (let j = 0; j < 8; j++) {
-                const piece = board[i][j];
-                if (piece && piece.type === 'k' && piece.color === color) {
-                    return `${String.fromCharCode(97 + j)}${8 - i}` as Square;
+    const findKingSquare = useCallback(
+        (color: 'w' | 'b'): Square | null => {
+            const board = gameInstance.board();
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const piece = board[i][j];
+                    if (piece && piece.type === 'k' && piece.color === color) {
+                        return `${String.fromCharCode(97 + j)}${
+                            8 - i
+                        }` as Square;
+                    }
                 }
             }
-        }
-        return null;
-    }, []);
+            return null;
+        },
+        [gameInstance]
+    );
 
     const isPlayersTurn = useCallback(() => {
-        return gameRef.current.turn() === props.playerColor;
-    }, [props.playerColor]);
+        return gameInstance.turn() === props.playerColor;
+    }, [props.playerColor, gameInstance]);
 
     const getMoveOptions = useCallback(
         (square: Square) => {
@@ -61,8 +76,7 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
                 return false;
             }
 
-            const game = gameRef.current;
-            const moves = game.moves({ square, verbose: true });
+            const moves = gameInstance.moves({ square, verbose: true });
 
             if (moves.length === 0) {
                 setSquareStyles((prev) => ({
@@ -74,10 +88,10 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
 
             const newSquares: CustomSquareStyles = {};
             moves.forEach((move: Move) => {
-                const targetPiece = game.get(move.to as Square);
+                const targetPiece = gameInstance.get(move.to as Square);
                 const isCapture =
                     targetPiece &&
-                    targetPiece.color !== game.get(square)?.color;
+                    targetPiece.color !== gameInstance.get(square)?.color;
 
                 newSquares[move.to] = {
                     background: isCapture
@@ -98,12 +112,14 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
 
             return true;
         },
-        [isPlayersTurn]
+        [isPlayersTurn, gameInstance]
     );
+
+    // props.setFen((fen: string) => gameRef.current.load(fen));
 
     const makeMove = useCallback(
         (from: Square, to: Square, promotion?: PieceSymbol) => {
-            const game = gameRef.current;
+            const game = gameInstance;
             try {
                 const move = game.move({ from, to, promotion });
                 if (move) {
@@ -130,6 +146,13 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
                             moveSquares: { ...INITIAL_SQUARE_STYLES },
                         }));
                     }
+
+                    props.onMoveComplete({
+                        from,
+                        to,
+                        promotion: promotion ?? 'q',
+                    });
+
                     return true;
                 }
             } catch (err) {
@@ -137,7 +160,7 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
             }
             return false;
         },
-        [props, findKingSquare]
+        [props, findKingSquare, gameInstance]
     );
 
     const onSquareClick = useCallback(
@@ -146,7 +169,7 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
                 return;
             }
 
-            const game = gameRef.current;
+            const game = gameInstance;
             setSquareStyles((prev) => ({
                 ...prev,
                 rightClickedSquares: { ...INITIAL_SQUARE_STYLES },
@@ -254,6 +277,7 @@ export default function ClickableChessboard(props: IChessBoardInterface) {
     return (
         <div className="w-full max-w-screen-lg mx-auto col-span-2 order-1 md:order-2">
             <Chessboard
+                boardOrientation={props.playerColor == 'w' ? 'white' : 'black'}
                 position={boardPosition}
                 animationDuration={200}
                 arePiecesDraggable={isPlayersTurn()}

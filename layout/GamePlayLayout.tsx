@@ -7,24 +7,51 @@ import GameStatsBar from '@/components/GameStatsBar';
 import { useEffect, useState } from 'react';
 import config from '@/config/config';
 import { usePathname } from 'next/navigation';
-import axios from 'axios';
-import { getCookie } from 'cookies-next';
 import { keys } from '@/config/keys';
-import ChessGame from '@/interfaces/chess.game.state';
+import ChessGame, {
+    BoardMove,
+    ChessState,
+    Player,
+} from '@/interfaces/chess.game.state';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
+import { getCookie } from 'cookies-next';
+import axios from 'axios';
+interface WSStartMessage {
+    type: string;
+    game: WSGameMessage;
+}
+
+interface WSGameMessage {
+    state: string;
+    whitePlayer: string;
+    blackPlayer: string;
+}
+
+interface WSMoveMessage {
+    type: string;
+    state: ChessState;
+}
+
+interface PlayerInfo {
+    gameID: string;
+    userID: string;
+    username: string;
+}
 
 export default function GamePlayLayout() {
     const pathname = usePathname();
-    const [userID, setUserID] = useState(null);
+    const [fen, setFen] = useState('');
     const [isReady, setIsReady] = useState(false);
+    const [playerInfo, setPlayerInfo] = useState<PlayerInfo | null>(null);
     const [game, setGame] = useState<ChessGame | null>(null);
+
     const { sendJsonMessage, lastJsonMessage, lastMessage, readyState } =
         useWebSocket(config.ws, {
             share: false,
             shouldReconnect: () => true,
         });
 
-    const playerColor = 'w';
+    const [playerColor, setPlayerColor] = useState<string | null>(null);
     const [movePairs, setMovePairs] = useState<string[][]>([]);
     const [moveCount, setMoveCount] = useState(0);
     const [whoseTurn, setWhoseTurn] = useState<'w' | 'b'>('w');
@@ -38,16 +65,20 @@ export default function GamePlayLayout() {
         }
 
         const userData = JSON.parse(currentUser);
-        setUserID(userData.id);
+        setPlayerInfo({
+            userID: userData.id,
+            username: userData.username,
+            gameID: pathname.split('/')[2],
+        });
     }, []);
 
     // Websocket authentication
     useEffect(() => {
         console.log('Connection state changed.');
-        if (readyState == ReadyState.OPEN && userID) {
+        if (readyState == ReadyState.OPEN && playerInfo) {
             sendJsonMessage({
                 type: 'auth',
-                userId: userID,
+                userId: playerInfo.userID,
             });
         }
     }, [readyState]);
@@ -55,42 +86,90 @@ export default function GamePlayLayout() {
     // Synchronization + broadcast game ready event
     useEffect(() => {
         const initialize = async () => {
-            const accessToken = getCookie(keys.auth);
-            if (!accessToken) {
-                window.location.href = '/auth/login';
-                return;
-            }
-
-            const gameID = pathname.split('/')[2];
-            const { data } = await axios.get(
-                `${config.api}/game/state/${gameID}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
+            const gameID = playerInfo?.gameID;
+            if (gameID) {
+                const accessToken = getCookie(keys.auth);
+                if (!accessToken) {
+                    window.location.href = '/auth/login';
+                    return;
                 }
-            );
 
-            console.log(data);
-            setGame(data.game);
-            sendJsonMessage({
-                type: 'join_game',
-                gameID,
-            });
-            sendJsonMessage({
-                type: 'player_ready',
-                gameID,
-            });
+                try {
+                    await axios.get(`${config.api}/game/state/${gameID}`, {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+
+                    sendJsonMessage({
+                        type: 'join_game',
+                        gameID,
+                    });
+                    sendJsonMessage({
+                        type: 'player_ready',
+                        gameID,
+                    });
+                } catch (err) {
+                    console.warn(err);
+                    window.location.href = '/';
+                }
+            }
         };
 
         initialize();
-    }, []);
+    }, [playerInfo]);
 
     // Listen for any new messages
     useEffect(() => {
-        console.log(`Got a new message: ${lastMessage?.data}`);
-        if (lastJsonMessage) {
-            console.log(`Got new json message:`, lastJsonMessage);
+        if (lastMessage) {
+            console.log(`Got a new message: ${lastMessage?.data}`);
+        }
+
+        if (
+            playerInfo &&
+            lastJsonMessage != null &&
+            Object.keys(lastJsonMessage as WSStartMessage).length != 0
+        ) {
+            const socketMessage = lastJsonMessage as WSStartMessage;
+
+            console.log(`Got new json message:`, socketMessage);
+            if (socketMessage.type == 'game_start') {
+                const game = socketMessage.game;
+                const parsedGame: ChessGame = {
+                    whitePlayer: JSON.parse(game.whitePlayer) as Player,
+                    blackPlayer: JSON.parse(game.blackPlayer) as Player,
+                    state: JSON.parse(game.state),
+                };
+
+                console.log('game:', parsedGame);
+
+                setPlayerColor(
+                    parsedGame.whitePlayer.username == playerInfo.username
+                        ? 'w'
+                        : 'b'
+                );
+                setFen(parsedGame.state.fen);
+                setGame(parsedGame);
+                setWhoseTurn(parsedGame.state.turn);
+                setIsReady(true);
+            } else if (
+                socketMessage.type == 'move' ||
+                socketMessage.type == 'move_accepted'
+            ) {
+                const moveMsg = lastJsonMessage as WSMoveMessage;
+                // forcing this assertion could be dangerous...
+                const newGameState: ChessGame = {
+                    whitePlayer: game!.whitePlayer,
+                    blackPlayer: game!.blackPlayer,
+                    state: moveMsg.state,
+                };
+
+                console.log('new state', newGameState);
+
+                setGame(newGameState);
+                setFen(newGameState.state.fen);
+                setWhoseTurn(newGameState.state.turn);
+            }
         }
     }, [lastMessage, lastJsonMessage]);
 
@@ -114,9 +193,23 @@ export default function GamePlayLayout() {
         }
     }
 
+    function makeMove(move: BoardMove) {
+        if (playerInfo) {
+            console.log('gameID:', playerInfo.gameID);
+            sendJsonMessage({
+                type: 'move',
+                data: {
+                    gameID: playerInfo.gameID,
+                    username: playerInfo?.username,
+                    ...move,
+                },
+            });
+        }
+    }
+
     return (
         <>
-            {!isReady ? (
+            {!playerInfo || !isReady || !game || !fen || !playerColor ? (
                 <></>
             ) : (
                 <>
@@ -125,8 +218,8 @@ export default function GamePlayLayout() {
                     </header>
                     <section className="flex flex-col md:grid grid-cols-4 gap-2 mx-auto w-[calc(100%-16px)] py-2 !max-w-[1400px]">
                         <GameStatsBar
-                            whitePlayerName={'AlgoXero'}
-                            blackPlayerName={'HalfLife'}
+                            whitePlayerName={game.whitePlayer.username}
+                            blackPlayerName={game.blackPlayer.username}
                             whoseTurn={whoseTurn}
                         />
                         <ClickableChessboard
@@ -135,6 +228,8 @@ export default function GamePlayLayout() {
                                 updateMoveHistory(history)
                             }
                             setWhoseTurn={(color) => setWhoseTurn(color)}
+                            onMoveComplete={(move) => makeMove(move)}
+                            fen={fen}
                         />
                         <GameHistoryBar
                             moveHistoryPairs={movePairs}
