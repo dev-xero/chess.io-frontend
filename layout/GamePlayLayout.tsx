@@ -54,12 +54,27 @@ export default function GamePlayLayout() {
 
     const [playerColor, setPlayerColor] = useState<string | null>(null);
     const [whoseTurn, setWhoseTurn] = useState<'w' | 'b'>('w');
-    const [whiteTimeLeft, setWhiteTimeLeft] = useState(0);
-    const [blackTimeLeft, setBlackTimeLeft] = useState(0);
+    const [gameTime, setGameTime] = useState({
+        white: 0,
+        black: 0,
+        isWhitePaused: true,
+        isBlackPaused: true,
+    });
 
     // still local for now
     const [movePairs, setMovePairs] = useState<string[][]>([]);
     const [moveCount, setMoveCount] = useState(0);
+
+    useEffect(() => {
+        if (game) {
+            setGameTime({
+                white: game.state.whiteTTP,
+                black: game.state.blackTTP,
+                isWhitePaused: whoseTurn === 'b',
+                isBlackPaused: whoseTurn === 'w',
+            });
+        }
+    }, [game, whoseTurn]);
 
     // User authentication
     useEffect(() => {
@@ -206,8 +221,8 @@ export default function GamePlayLayout() {
                 data: {
                     gameID: playerInfo.gameID,
                     username: playerInfo?.username,
-                    whiteTTP: whiteTimeLeft,
-                    blackTTP: blackTimeLeft,
+                    whiteTTP: gameTime.white,
+                    blackTTP: gameTime.black,
                     ...move,
                 },
             });
@@ -228,19 +243,12 @@ export default function GamePlayLayout() {
                             whoseTurn={whoseTurn}
                             gameType={game.state.gameType}
                             duration={game.state.duration}
-                            blackTimeLeft={game.state.blackTTP}
-                            whiteTimeLeft={game.state.whiteTTP}
+                            gameTime={gameTime}
+                            setGameTime={setGameTime}
                             whitePlayerName={game.whitePlayer.username}
                             blackPlayerName={game.blackPlayer.username}
-                            onWhiteTimeLeftUpdate={(ms) =>
-                                setWhiteTimeLeft(Math.floor(ms / 1000))
-                            }
-                            onBlackTimeLeftUpdate={(ms) =>
-                                setBlackTimeLeft(
-                                    Math.floor(Math.floor(ms / 1000))
-                                )
-                            }
                         />
+
                         <ClickableChessboard
                             playerColor={playerColor}
                             onMoveCompleted={(history) =>
