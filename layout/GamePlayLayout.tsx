@@ -16,6 +16,7 @@ import ChessGame, {
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { getCookie } from 'cookies-next';
 import axios from 'axios';
+
 interface WSStartMessage {
     type: string;
     game: WSGameMessage;
@@ -52,9 +53,13 @@ export default function GamePlayLayout() {
         });
 
     const [playerColor, setPlayerColor] = useState<string | null>(null);
+    const [whoseTurn, setWhoseTurn] = useState<'w' | 'b'>('w');
+    const [whiteTimeLeft, setWhiteTimeLeft] = useState(0);
+    const [blackTimeLeft, setBlackTimeLeft] = useState(0);
+
+    // still local for now
     const [movePairs, setMovePairs] = useState<string[][]>([]);
     const [moveCount, setMoveCount] = useState(0);
-    const [whoseTurn, setWhoseTurn] = useState<'w' | 'b'>('w');
 
     // User authentication
     useEffect(() => {
@@ -201,6 +206,8 @@ export default function GamePlayLayout() {
                 data: {
                     gameID: playerInfo.gameID,
                     username: playerInfo?.username,
+                    whiteTTP: whiteTimeLeft,
+                    blackTTP: blackTimeLeft,
                     ...move,
                 },
             });
@@ -218,9 +225,21 @@ export default function GamePlayLayout() {
                     </header>
                     <section className="flex flex-col md:grid grid-cols-4 gap-2 mx-auto w-[calc(100%-16px)] py-2 !max-w-[1400px]">
                         <GameStatsBar
+                            whoseTurn={whoseTurn}
+                            gameType={game.state.gameType}
+                            timeLimit={game.state.duration}
+                            blackTimeLeft={game.state.blackTTP}
+                            whiteTimeLeft={game.state.whiteTTP}
                             whitePlayerName={game.whitePlayer.username}
                             blackPlayerName={game.blackPlayer.username}
-                            whoseTurn={whoseTurn}
+                            onWhiteTimeLeftUpdate={(ms) =>
+                                setWhiteTimeLeft(Math.floor(ms / 1000))
+                            }
+                            onBlackTimeLeftUpdate={(ms) =>
+                                setBlackTimeLeft(
+                                    Math.floor(Math.floor(ms / 1000))
+                                )
+                            }
                         />
                         <ClickableChessboard
                             playerColor={playerColor}

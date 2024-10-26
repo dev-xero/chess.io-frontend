@@ -6,6 +6,7 @@ interface IChessClockProps {
     label: string;
     shouldPause: boolean;
     onTimeElapsed: () => void;
+    onTick: (ms: number) => void;
 }
 
 export default function ChessClock(props: IChessClockProps) {
@@ -25,7 +26,7 @@ export default function ChessClock(props: IChessClockProps) {
 
     useEffect(() => {
         setIsClient(true);
-    }, [])
+    }, []);
 
     // accurate to the nearest 100th of a millisecond
     useEffect(() => {
@@ -49,6 +50,8 @@ export default function ChessClock(props: IChessClockProps) {
                     }
                     return newTimeInMillis;
                 });
+
+                props.onTick(timeInMillis <= 0 ? 0 : timeInMillis)
             }, 100);
 
             return () => {
@@ -59,7 +62,9 @@ export default function ChessClock(props: IChessClockProps) {
         }
     }, [props.shouldPause, isClient]);
 
-    const timeDisplay = isClient ? formatTime(timeInMillis) : formatTime(props.timeLimit * 1000);
+    const timeDisplay = isClient
+        ? formatTime(timeInMillis)
+        : formatTime(props.timeLimit * 1000);
 
     return (
         <section className="w-full py-2 rounded-md font-bold text-2xl">

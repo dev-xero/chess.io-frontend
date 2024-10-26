@@ -1,6 +1,7 @@
 export interface ChessState {
     fen: string;
     pgn: string;
+    duration: number;
     whiteTTP: number;
     blackTTP: number;
     gameType: 'Rapid' | 'Bullet' | 'Blitz';
