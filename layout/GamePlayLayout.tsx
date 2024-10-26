@@ -2,7 +2,7 @@
 
 import ClickableChessboard from '@/components/ClickableChessboard';
 import GameHistoryBar from '@/components/GameHistoryBar';
-import Header from '@/components/Header';
+import ChessIO from '@/components/ChessIO';
 import GameStatsBar from '@/components/GameStatsBar';
 import { useEffect, useState } from 'react';
 import config from '@/config/config';
@@ -41,6 +41,13 @@ interface PlayerInfo {
     username: string;
 }
 
+interface GameTimeState {
+    white: number;
+    black: number;
+    isWhitePaused: boolean;
+    isBlackPaused: boolean;
+}
+
 export default function GamePlayLayout() {
     const pathname = usePathname();
     const [fen, setFen] = useState('');
@@ -54,31 +61,29 @@ export default function GamePlayLayout() {
             shouldReconnect: () => true,
         });
 
-    const [doneTimeSetup, setDoneTimeSetup] = useState(false);
     const [playerColor, setPlayerColor] = useState<string | null>(null);
     const [whoseTurn, setWhoseTurn] = useState<'w' | 'b'>('w');
     const [gameTime, setGameTime] = useState({
-        white: 600,
-        black: 600,
+        white: 180000,
+        black: 180000,
         isWhitePaused: true,
         isBlackPaused: true,
     });
 
-    // still local for now
+    // update this later
     const [movePairs, setMovePairs] = useState<string[][]>([]);
     const [moveCount, setMoveCount] = useState(0);
 
-    useEffect(() => {
-        if (game && game.duration && !doneTimeSetup) {
-            setGameTime({
-                white: game.duration,
-                black: game.duration,
-                isWhitePaused: whoseTurn === 'b',
-                isBlackPaused: whoseTurn === 'w',
-            });
-            setDoneTimeSetup(true);
-        }
-    }, [game, whoseTurn]);
+    // useEffect(() => {
+    //     if (game && game.duration) {
+    //         setGameTime({
+    //             white: game.duration,
+    //             black: game.duration,
+    //             isWhitePaused: whoseTurn === 'b',
+    //             isBlackPaused: whoseTurn === 'w',
+    //         });
+    //     }
+    // }, [game, whoseTurn]);
 
     // User authentication
     useEffect(() => {
@@ -176,17 +181,15 @@ export default function GamePlayLayout() {
                         : 'b'
                 );
 
+                setFen(parsedGame.state.fen);
+                setGame(parsedGame);
                 setWhoseTurn(parsedGame.state.turn);
-                setGameTime((prevTime) => ({
-                    ...prevTime,
+                setGameTime({
                     white: parsedGame.duration,
                     black: parsedGame.duration,
                     isWhitePaused: parsedGame.state.turn === 'b',
                     isBlackPaused: parsedGame.state.turn === 'w',
-                }));
-                setFen(parsedGame.state.fen);
-                setGame(parsedGame);
-                
+                });
                 console.log('updated game time.');
                 setIsReady(true);
             } else if (
@@ -204,16 +207,14 @@ export default function GamePlayLayout() {
 
                 console.log('new state', newGameState);
 
+                setFen(newGameState.state.fen);
+                setGame(newGameState);
                 setWhoseTurn(newGameState.state.turn);
                 setGameTime((prevTime) => ({
                     ...prevTime,
-                    white: moveMsg.state.whiteTTP,
-                    black: moveMsg.state.blackTTP,
                     isWhitePaused: moveMsg.state.turn === 'b',
                     isBlackPaused: moveMsg.state.turn === 'w',
                 }));
-                setFen(newGameState.state.fen);
-                setGame(newGameState);
             }
         }
     }, [lastMessage, lastJsonMessage]);
@@ -236,6 +237,15 @@ export default function GamePlayLayout() {
                 setMovePairs(pairs);
             }
         }
+    }
+
+    function isValidGameTime(time: GameTimeState): boolean {
+        return (
+            !isNaN(time.white) &&
+            !isNaN(time.black) &&
+            time.white > 0 &&
+            time.black > 0
+        );
     }
 
     function makeMove(move: BoardMove) {
@@ -261,13 +271,12 @@ export default function GamePlayLayout() {
             !game ||
             !fen ||
             !playerColor ||
-            isNaN(gameTime.white) ||
-            isNaN(gameTime.black) ? (
+            !isValidGameTime(gameTime) ? (
                 <></>
             ) : (
                 <>
                     <header className="w-full flex items-center justify-center mt-4">
-                        <Header />
+                        <ChessIO />
                     </header>
                     <section className="flex flex-col md:grid grid-cols-4 gap-2 mx-auto w-[calc(100%-16px)] py-2 !max-w-[1400px]">
                         <GameStatsBar

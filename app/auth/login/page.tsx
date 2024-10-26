@@ -1,7 +1,7 @@
 'use client';
 
 import FilledButton from '@/components/FilledButton';
-import Header from '@/components/Header';
+import ChessIO from '@/components/ChessIO';
 import InputField from '@/components/InputField';
 import Error from '@/components/Error';
 import Link from '@/components/Link';
@@ -84,7 +84,7 @@ export default function Page() {
         <CenteredGrid>
             <section className="w-screen md:w-[512px] max-w-lg flex flex-col items-center py-2 px-4 relative">
                 <Marker />
-                <Header />
+                <ChessIO />
                 <section className="text-center flex flex-col mt-8">
                     <h2 className="font-bold mb-2 text-2xl">Welcome Back</h2>
                     <p className="text-faded">

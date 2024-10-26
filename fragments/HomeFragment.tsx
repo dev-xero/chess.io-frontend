@@ -1,6 +1,6 @@
 'use client';
 
-import Header from '@/components/Header';
+import ChessIO from '@/components/ChessIO';
 import Marker from '@/components/Marker';
 import CenteredGrid from '@/layout/CenteredGrid';
 import IPlayer from '@/global/i.player';
@@ -54,7 +54,7 @@ export default function HomeFragment() {
         <CenteredGrid>
             <main className="w-full md:w-[512px] max-w-lg flex flex-col items-center py-2 px-4 relative">
                 <Marker />
-                <Header />
+                <ChessIO />
                 {/* INFO SECTION */}
                 <section className="text-center flex items-center gap-2 mt-8">
                     <p className="font-bold mb-2 text-faded">

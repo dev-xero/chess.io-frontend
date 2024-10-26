@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-export default function Header() {
+export default function ChessIO() {
     return (
         <Image
             width={140}
