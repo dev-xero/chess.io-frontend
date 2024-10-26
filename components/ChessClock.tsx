@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 
 interface IChessClockProps {
     timeLimit: number;
+    currentTime: number;
     label: string;
     shouldPause: boolean;
     onTimeElapsed: () => void;
@@ -10,15 +11,13 @@ interface IChessClockProps {
 }
 
 export default function ChessClock(props: IChessClockProps) {
-    const [timeInMillis, setTimeInMillis] = useState(props.timeLimit * 1000);
     const [isClient, setIsClient] = useState(false);
     const lastTickRef = useRef<number | null>(null);
-
+    
     const formatTime = (ms: number) => {
         const minutes = Math.floor(ms / (60 * 1000));
         const seconds = Math.floor((ms % (60 * 1000)) / 1000);
         const milliseconds = Math.floor((ms % 1000) / 100);
-
         return `${minutes.toString().padStart(2, '0')}:${seconds
             .toString()
             .padStart(2, '0')}.${milliseconds}`;
@@ -32,26 +31,21 @@ export default function ChessClock(props: IChessClockProps) {
     useEffect(() => {
         if (!props.shouldPause) {
             lastTickRef.current = Date.now();
-
             const counter = setInterval(() => {
                 const now = Date.now();
                 const elapsed = lastTickRef.current
                     ? now - lastTickRef.current
                     : 100;
-
                 lastTickRef.current = now;
-
-                setTimeInMillis((prevMillis) => {
-                    const newTimeInMillis = prevMillis - elapsed;
-                    if (newTimeInMillis <= 0) {
-                        props.onTimeElapsed();
-                        clearInterval(counter);
-                        return 0;
-                    }
-                    return newTimeInMillis;
-                });
-
-                props.onTick(timeInMillis <= 0 ? 0 : timeInMillis)
+                
+                const newTimeInMillis = props.currentTime - elapsed;
+                if (newTimeInMillis <= 0) {
+                    props.onTimeElapsed();
+                    clearInterval(counter);
+                    props.onTick(0);
+                } else {
+                    props.onTick(newTimeInMillis);
+                }
             }, 100);
 
             return () => {
@@ -60,10 +54,10 @@ export default function ChessClock(props: IChessClockProps) {
         } else {
             lastTickRef.current = null;
         }
-    }, [props.shouldPause, isClient]);
+    }, [props.shouldPause, isClient, props.currentTime]);
 
     const timeDisplay = isClient
-        ? formatTime(timeInMillis)
+        ? formatTime(props.currentTime)
         : formatTime(props.timeLimit * 1000);
 
     return (

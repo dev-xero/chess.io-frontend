@@ -227,7 +227,7 @@ export default function GamePlayLayout() {
                         <GameStatsBar
                             whoseTurn={whoseTurn}
                             gameType={game.state.gameType}
-                            timeLimit={game.state.duration}
+                            duration={game.state.duration}
                             blackTimeLeft={game.state.blackTTP}
                             whiteTimeLeft={game.state.whiteTTP}
                             whitePlayerName={game.whitePlayer.username}

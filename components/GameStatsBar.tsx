@@ -6,7 +6,7 @@ import {
     Lightning,
     Timer,
 } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import ChessClock from './ChessClock';
 
 type Game = 'Rapid' | 'Blitz' | 'Bullet';
@@ -14,34 +14,24 @@ type Game = 'Rapid' | 'Blitz' | 'Bullet';
 interface IGameStatsBarProps {
     gameType: Game;
     whoseTurn: 'w' | 'b';
-    timeLimit: number;
-    whiteTimeLeft: number;
-    blackTimeLeft: number;
+    duration: number;
+    gameTime: {
+        white: number;
+        black: number;
+        isWhitePaused: boolean;
+        isBlackPaused: boolean;
+    };
+    setGameTime: (time: {
+        white: number;
+        black: number;
+        isWhitePaused: boolean;
+        isBlackPaused: boolean;
+    }) => void;
     whitePlayerName: string;
     blackPlayerName: string;
-    onWhiteTimeLeftUpdate: (ms: number) => void;
-    onBlackTimeLeftUpdate: (ms: number) => void;
 }
 
 export default function GameStatsBar(props: IGameStatsBarProps) {
-    const [isWhitePaused, setIsWhitePaused] = useState(props.whoseTurn == 'b');
-    const [isBlackPaused, setIsBlackPaused] = useState(props.whoseTurn == 'w');
-    const [whiteTimeLeft, setWhiteTimeLeft] = useState(props.timeLimit);
-    const [blackTimeLeft, setBlackTimeLeft] = useState(props.timeLimit);
-
-    useEffect(() => {
-        setIsWhitePaused(props.whoseTurn == 'b');
-        setIsBlackPaused(props.whoseTurn == 'w');
-    }, [props.whoseTurn]);
-
-    useEffect(() => {
-        props.onWhiteTimeLeftUpdate(whiteTimeLeft);
-    }, [whiteTimeLeft])
-
-    useEffect(() => {
-        props.onBlackTimeLeftUpdate(blackTimeLeft);
-    }, [blackTimeLeft])
-
     return (
         <aside className="col-span-1 order-2 md:order-1">
             <Card>
@@ -59,7 +49,7 @@ export default function GameStatsBar(props: IGameStatsBarProps) {
                 </h3>
                 <p className="flex gap-2 mt-2 text-faded items-center">
                     <Clock size={18} weight="fill" />
-                    {props.timeLimit / 60}mins
+                    {props.duration / 60}mins
                 </p>
             </Card>
             <Card>
@@ -68,17 +58,29 @@ export default function GameStatsBar(props: IGameStatsBarProps) {
                 </h3>
                 <ChessClock
                     label={props.whitePlayerName}
-                    shouldPause={isWhitePaused}
-                    timeLimit={props.whiteTimeLeft}
+                    timeLimit={props.duration}
+                    currentTime={props.gameTime.white}
+                    shouldPause={props.gameTime.isWhitePaused}
                     onTimeElapsed={() => alert('White Time Up!')}
-                    onTick={(ms) => setWhiteTimeLeft(ms)}
+                    onTick={(ms) =>
+                        props.setGameTime({
+                            ...props.gameTime,
+                            white: ms,
+                        })
+                    }
                 />
                 <ChessClock
                     label={props.blackPlayerName}
-                    shouldPause={isBlackPaused}
-                    timeLimit={props.blackTimeLeft}
+                    timeLimit={props.duration}
+                    currentTime={props.gameTime.black}
+                    shouldPause={props.gameTime.isBlackPaused}
                     onTimeElapsed={() => alert('Black Time Up!')}
-                    onTick={(ms) => setBlackTimeLeft(ms)}
+                    onTick={(ms) =>
+                        props.setGameTime({
+                            ...props.gameTime,
+                            black: ms,
+                        })
+                    }
                 />
             </Card>
             <Card>
