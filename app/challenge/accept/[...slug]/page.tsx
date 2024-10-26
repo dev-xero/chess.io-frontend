@@ -44,7 +44,15 @@ export default function Page() {
                     },
                 }
             );
-            console.log(data);
+            const { payload } = data;
+            const gameID = payload.gameState.gameID.split(':')[1];
+            localStorage.setItem(
+                keys.game.active,
+                JSON.stringify(payload.gameState)
+            );
+
+            console.log('game started successfully.');
+            window.location.href = `/game/${gameID}`;
         } catch (err) {
             const axiosError = err as AxiosError;
             if (axiosError.response) {
@@ -84,13 +92,12 @@ export default function Page() {
     useEffect(() => {
         console.log('Attempting to join game.');
         const parts = pathname.split('/');
-        if (parts.length != 4) {
+        if (parts.length != 5) {
             window.location.href = '/challenge/create';
             return;
         }
-        const gameID = parts[3];
-        if (userID && gameID) 
-            acceptChallenge(gameID);
+        const gameID = parts[4];
+        if (userID && gameID) acceptChallenge(gameID);
     }, [userID]);
 
     useEffect(() => {

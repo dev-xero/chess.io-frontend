@@ -2,6 +2,7 @@ export const keys = {
     auth: '_act',
     user: 'uur',
     game: {
-        pending: 'gpe'
+        pending: 'gpe',
+        active: 'gaa'
     }
 }

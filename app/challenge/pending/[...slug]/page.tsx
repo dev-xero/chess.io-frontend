@@ -9,6 +9,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 interface IPendingChallenge {
     link: string;
+    challenger: string;
     expiresIn: number;
 }
 
@@ -57,6 +58,18 @@ export default function Page() {
 
     useEffect(() => {
         console.log(`Got a new message: ${lastMessage?.data}`);
+        try {
+            const socketMsg = JSON.parse(lastMessage?.data);
+            if (socketMsg.type == 'game_started') {
+                const gameID = socketMsg.gameID.split(":")[1];
+                localStorage.setItem(keys.game.active, JSON.stringify(socketMsg.gameState));
+                
+                console.log('game started successfully.');
+                window.location.href=`/game/${gameID}`
+            }
+        } catch {
+            console.warn('Not JSON parsable.');
+        }
     }, [lastMessage]);
 
     return (

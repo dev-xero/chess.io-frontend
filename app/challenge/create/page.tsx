@@ -47,8 +47,12 @@ export default function Page() {
             const accessToken = getCookie(keys.auth);
             if (!accessToken) {
                 displayError('Session has expired, log in again.');
+                setTimeout(() => {
+                    window.location.href = '/auth/login';
+                }, 500);
                 return;
             }
+            localStorage.removeItem(keys.game.pending); // remove any previously pending games
             const { data } = await axios.post(
                 `${config.api}/challenge/create?duration=${gameDuration}`,
                 {
@@ -65,10 +69,12 @@ export default function Page() {
             const { expiresIn, link } = data.payload;
             localStorage.setItem(
                 keys.game.pending,
-                JSON.stringify({ expiresIn, link })
+                JSON.stringify({ expiresIn, link, challenger: loggedInUser.username })
             );
-            const challengeID = link.split('/')[1];
-            window.location.href = `/challenge/pending/${challengeID}`;
+            const parts = link.split('/');
+            const challenger = parts[1];
+            const challengeID = parts[2];
+            window.location.href = `/challenge/pending/${challenger}/${challengeID}`;
         } catch (err) {
             const axiosError = err as AxiosError;
             if (axiosError.response) {
@@ -94,8 +100,8 @@ export default function Page() {
                         Create a Challenge
                     </h2>
                     <p className="text-faded">
-                        We&apos;ll generate a unique game link for you to play others
-                        with.
+                        We&apos;ll generate a unique game link for you to play
+                        others with.
                     </p>
                 </section>
                 {/* TIME CONTROL */}
@@ -115,7 +121,9 @@ export default function Page() {
                             />
                         ))}
                     </section>
-                    <p className="text-center text-sm text-faded mt-8 mb-2">Challengers play White by default.</p>
+                    <p className="text-center text-sm text-faded mt-8 mb-2">
+                        Challengers play White by default.
+                    </p>
                 </section>
                 {/* CREATE CHALLENGE BUTTON */}
                 <IconButton
