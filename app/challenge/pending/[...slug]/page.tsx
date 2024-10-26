@@ -60,7 +60,7 @@ export default function Page() {
         console.log(`Got a new message: ${lastMessage?.data}`);
         try {
             const socketMsg = JSON.parse(lastMessage?.data);
-            if (socketMsg.type == 'game_started') {
+            if (socketMsg.type == 'challenge_accepted') {
                 const gameID = socketMsg.gameID.split(":")[1];
                 localStorage.setItem(keys.game.active, JSON.stringify(socketMsg.gameState));
                 

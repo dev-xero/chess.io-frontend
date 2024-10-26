@@ -13,6 +13,8 @@ type Game = 'Rapid' | 'Blitz' | 'Bullet';
 
 interface IGameStatsBarProps {
     whoseTurn: 'w' | 'b';
+    whitePlayerName: string;
+    blackPlayerName: string;
 }
 
 export default function GameStatsBar(props: IGameStatsBarProps) {
@@ -26,8 +28,6 @@ export default function GameStatsBar(props: IGameStatsBarProps) {
 
     const gameType: Game = 'Rapid';
     const timeLimit = 10;
-    const whitePlayerName = 'algoXero';
-    const blackPlayerName = 'halflife';
     const whiteTimeLeft = 600;
     const blackTimeLeft = 600;
 
@@ -64,13 +64,13 @@ export default function GameStatsBar(props: IGameStatsBarProps) {
                     CLOCK
                 </h3>
                 <ChessClock
-                    label={whitePlayerName}
+                    label={props.whitePlayerName}
                     shouldPause={isWhitePaused}
                     timeLimit={whiteTimeLeft}
                     onTimeElapsed={() => alert('White Time Up!')}
                 />
                 <ChessClock
-                    label={blackPlayerName}
+                    label={props.blackPlayerName}
                     shouldPause={isBlackPaused}
                     timeLimit={blackTimeLeft}
                     onTimeElapsed={() => alert('Black Time Up!')}
