@@ -227,11 +227,9 @@ export default function GamePlayLayout() {
                 return;
             } else {
                 const pairs: string[][] = [...movePairs];
-                if (moveCount % 2 == 0) {
-                    pairs.push(move);
-                } else {
-                    pairs[movePairs.length - 1].push(...move);
-                }
+                
+                if (moveCount % 2 == 0) pairs.push(move);
+                else pairs[movePairs.length - 1].push(...move);
 
                 setMoveCount((moveCount) => moveCount + 1);
                 setMovePairs(pairs);
