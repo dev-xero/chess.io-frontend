@@ -74,16 +74,34 @@ export default function GamePlayLayout() {
     const [movePairs, setMovePairs] = useState<string[][]>([]);
     const [moveCount, setMoveCount] = useState(0);
 
-    // useEffect(() => {
-    //     if (game && game.duration) {
-    //         setGameTime({
-    //             white: game.duration,
-    //             black: game.duration,
-    //             isWhitePaused: whoseTurn === 'b',
-    //             isBlackPaused: whoseTurn === 'w',
-    //         });
-    //     }
-    // }, [game, whoseTurn]);
+    // Game state synchronization
+    const handleGameStateUpdate = (newState: ChessState, duration: number) => {
+        setFen(newState.fen);
+        setGameTime((prev) => ({
+            ...prev,
+            white: newState.whiteTTP,
+            black: newState.blackTTP,
+            isWhitePaused: newState.turn === 'b',
+            isBlackPaused: newState.turn === 'w',
+        }));
+        setWhoseTurn(newState.turn);
+    }
+
+    // const syncTime = (duration: number) => {
+    //     const serverTime = Date.now();
+    //     return duration - (serverTime - game!.startTime);
+    // };
+    
+    useEffect(() => {
+        if (game) {
+            setGameTime({
+                white: game.state.whiteTTP,
+                black: game.state.blackTTP,
+                isWhitePaused: game.state.turn === 'b',
+                isBlackPaused: game.state.turn === 'w',
+            });
+        }
+    }, [game]);
 
     // User authentication
     useEffect(() => {
@@ -162,6 +180,7 @@ export default function GamePlayLayout() {
             const socketMessage = lastJsonMessage as WSStartMessage;
 
             console.log(`Got new json message:`, socketMessage);
+            
             if (socketMessage.type == 'game_start') {
                 const game = socketMessage.game;
                 const parsedGame: ChessGame = {
@@ -171,33 +190,22 @@ export default function GamePlayLayout() {
                     duration: game.duration,
                 };
 
-                console.log('game duration:', parsedGame.duration);
-
-                // console.log('game:', parsedGame);
-
                 setPlayerColor(
                     parsedGame.whitePlayer.username == playerInfo.username
                         ? 'w'
                         : 'b'
                 );
 
-                setFen(parsedGame.state.fen);
-                setGame(parsedGame);
-                setWhoseTurn(parsedGame.state.turn);
-                setGameTime({
-                    white: parsedGame.duration,
-                    black: parsedGame.duration,
-                    isWhitePaused: parsedGame.state.turn === 'b',
-                    isBlackPaused: parsedGame.state.turn === 'w',
-                });
-                console.log('updated game time.');
+                setGame(parsedGame); 
+                handleGameStateUpdate(parsedGame.state, parsedGame.duration)               
                 setIsReady(true);
             } else if (
                 socketMessage.type == 'move' ||
                 socketMessage.type == 'move_accepted'
             ) {
                 const moveMsg = lastJsonMessage as WSMoveMessage;
-                // forcing this assertion could be dangerous...
+                
+                // forcing this assertion might be problematic
                 const newGameState: ChessGame = {
                     duration: moveMsg.duration,
                     whitePlayer: game!.whitePlayer,
@@ -207,14 +215,8 @@ export default function GamePlayLayout() {
 
                 console.log('new state', newGameState);
 
-                setFen(newGameState.state.fen);
                 setGame(newGameState);
-                setWhoseTurn(newGameState.state.turn);
-                setGameTime((prevTime) => ({
-                    ...prevTime,
-                    isWhitePaused: moveMsg.state.turn === 'b',
-                    isBlackPaused: moveMsg.state.turn === 'w',
-                }));
+                handleGameStateUpdate(moveMsg.state, moveMsg.duration);
             }
         }
     }, [lastMessage, lastJsonMessage]);

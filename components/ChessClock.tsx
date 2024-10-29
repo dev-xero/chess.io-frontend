@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 
@@ -18,94 +20,68 @@ export default function ChessClock({
     onTimeElapsed,
     onTick,
 }: ChessClockProps) {
-    const rafIdRef = useRef<number | null>(null);
-    const lastTickRef = useRef<number | null>(null);
+    const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
     const remainingTimeRef = useRef<number>(currentTime);
     const [displayTime, setDisplayTime] = useState(currentTime);
     const [isClient, setIsClient] = useState(false);
 
-    // Track when pause state changes
-    const pauseChangeRef = useRef<number | null>(null);
-
+    // Format time into MM:SS.d
     const formatTime = (ms: number): string => {
         const totalSeconds = Math.max(0, Math.floor(ms / 1000));
         const seconds = totalSeconds % 60;
         const minutes = Math.floor(totalSeconds / 60);
-        const decisecond = Math.floor((Math.max(0, ms) % 1000) / 100);
+        const decisecond = Math.floor((ms % 1000) / 100);
 
         return `${minutes}:${seconds
             .toString()
             .padStart(2, '0')}.${decisecond}`;
     };
 
-    const updateTimer = (timestamp: number) => {
-        if (shouldPause) {
-            rafIdRef.current = null;
-            return;
+    const updateTimer = () => {
+        remainingTimeRef.current -= 100;
+
+        setDisplayTime(remainingTimeRef.current);
+        onTick(remainingTimeRef.current);
+
+        if (remainingTimeRef.current <= 0) {
+            onTimeElapsed();
+            stopTimer();
         }
-
-        if (
-            lastTickRef.current === null ||
-            pauseChangeRef.current === timestamp
-        ) {
-            lastTickRef.current = timestamp;
-            pauseChangeRef.current = null;
-        }
-
-        const elapsed = timestamp - lastTickRef.current;
-        lastTickRef.current = timestamp;
-
-        // Update the remaining time
-        remainingTimeRef.current = Math.max(
-            0,
-            remainingTimeRef.current - elapsed
-        );
-
-        // Update display and trigger callback if time changed significantly
-        if (Math.abs(remainingTimeRef.current - displayTime) >= 100) {
-            setDisplayTime(remainingTimeRef.current);
-            onTick(remainingTimeRef.current);
-
-            if (remainingTimeRef.current <= 0) {
-                onTimeElapsed();
-                return;
-            }
-        }
-
-        rafIdRef.current = requestAnimationFrame(updateTimer);
     };
 
-    // Handle pause/unpause and cleanup
-    useEffect(() => {
-        if (!shouldPause && !rafIdRef.current) {
-            pauseChangeRef.current = performance.now();
-            rafIdRef.current = requestAnimationFrame(updateTimer);
+    // Ticks every 100ms
+    const startTimer = () => {
+        if (!intervalIdRef.current) {
+            intervalIdRef.current = setInterval(updateTimer, 100);
         }
+    };
 
-        return () => {
-            if (rafIdRef.current) {
-                cancelAnimationFrame(rafIdRef.current);
-                rafIdRef.current = null;
-            }
-        };
+    const stopTimer = () => {
+        if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+            intervalIdRef.current = null;
+        }
+    };
+
+    useEffect(() => {
+        if (shouldPause) stopTimer();
+        else startTimer();
+
+        return stopTimer;
     }, [shouldPause]);
 
-    // Sync with external time updates
+    // Sync with external time updates from server
     useEffect(() => {
         remainingTimeRef.current = currentTime;
-        setDisplayTime(currentTime);
 
-        // Reset last tick when time is updated externally
-        lastTickRef.current = null;
+        setDisplayTime(currentTime);
     }, [currentTime]);
 
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
+    useEffect(() => setIsClient(true), []);
 
     const timeDisplay = isClient
         ? formatTime(displayTime)
-        : formatTime(timeLimit * 1000);
+        : formatTime(timeLimit);
 
     return (
         <section className="w-full py-2 rounded-md font-bold text-2xl">
