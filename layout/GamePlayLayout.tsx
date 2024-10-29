@@ -75,7 +75,7 @@ export default function GamePlayLayout() {
     const [moveCount, setMoveCount] = useState(0);
 
     // Game state synchronization
-    const handleGameStateUpdate = (newState: ChessState, duration: number) => {
+    const handleGameStateUpdate = (newState: ChessState) => {
         setFen(newState.fen);
         setGameTime((prev) => ({
             ...prev,
@@ -197,7 +197,7 @@ export default function GamePlayLayout() {
                 );
 
                 setGame(parsedGame); 
-                handleGameStateUpdate(parsedGame.state, parsedGame.duration)               
+                handleGameStateUpdate(parsedGame.state)               
                 setIsReady(true);
             } else if (
                 socketMessage.type == 'move' ||
@@ -216,7 +216,7 @@ export default function GamePlayLayout() {
                 console.log('new state', newGameState);
 
                 setGame(newGameState);
-                handleGameStateUpdate(moveMsg.state, moveMsg.duration);
+                handleGameStateUpdate(moveMsg.state);
             }
         }
     }, [lastMessage, lastJsonMessage]);
