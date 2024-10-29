@@ -16,37 +16,12 @@ import ChessGame, {
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { getCookie } from 'cookies-next';
 import axios from 'axios';
-
-interface WSStartMessage {
-    type: string;
-    game: WSGameMessage;
-}
-
-interface WSGameMessage {
-    duration: number;
-    whitePlayer: string;
-    blackPlayer: string;
-    state: string;
-}
-
-interface WSMoveMessage {
-    type: string;
-    state: ChessState;
-    duration: number;
-}
-
-interface PlayerInfo {
-    gameID: string;
-    userID: string;
-    username: string;
-}
-
-interface GameTimeState {
-    white: number;
-    black: number;
-    isWhitePaused: boolean;
-    isBlackPaused: boolean;
-}
+import {
+    GameTimeState,
+    PlayerInfo,
+    WSMoveMessage,
+    WSStartMessage,
+} from './interfaces/gameplay.interfaces';
 
 export default function GamePlayLayout() {
     const pathname = usePathname();
@@ -74,32 +49,87 @@ export default function GamePlayLayout() {
     const [movePairs, setMovePairs] = useState<string[][]>([]);
     const [moveCount, setMoveCount] = useState(0);
 
+    // Account for time lag from the client
+    function syncTime(duration: number) {
+        const serverTime = Date.now();
+        return duration - (serverTime - (game ? game.startTime : 0));
+    }
+
+    function updateMoveHistory(move: string[]) {
+        if (move.length != 0) {
+            if (moveCount == 0) {
+                movePairs.push(move);
+                setMoveCount(1);
+                return;
+            } else {
+                const pairs: string[][] = [...movePairs];
+
+                if (moveCount % 2 == 0) pairs.push(move);
+                else pairs[movePairs.length - 1].push(...move);
+
+                setMoveCount((moveCount) => moveCount + 1);
+                setMovePairs(pairs);
+            }
+        }
+    }
+
+    function isValidGameTime(time: GameTimeState): boolean {
+        return (
+            !isNaN(time.white) &&
+            !isNaN(time.black) &&
+            time.white > 0 &&
+            time.black > 0
+        );
+    }
+
+    function makeMove(move: BoardMove) {
+        if (playerInfo) {
+            // pausing right before sending
+            setGameTime((prev) => ({
+                ...prev,
+                isWhitePaused: true,
+                isBlackPaused: true,
+            }));
+
+            setTimeout(() => {
+                sendJsonMessage({
+                    type: 'move',
+                    data: {
+                        gameID: playerInfo.gameID,
+                        username: playerInfo?.username,
+                        whiteTTP: gameTime.white,
+                        blackTTP: gameTime.black,
+                        ...move,
+                    },
+                });
+            }, 500);
+        }
+    }
+
     // Game state synchronization
     const handleGameStateUpdate = (newState: ChessState) => {
         setFen(newState.fen);
+
         setGameTime((prev) => ({
             ...prev,
-            white: newState.whiteTTP,
-            black: newState.blackTTP,
+            white: syncTime(newState.whiteTTP),
+            black: syncTime(newState.blackTTP),
             isWhitePaused: newState.turn === 'b',
             isBlackPaused: newState.turn === 'w',
         }));
-        setWhoseTurn(newState.turn);
-    }
 
-    // const syncTime = (duration: number) => {
-    //     const serverTime = Date.now();
-    //     return duration - (serverTime - game!.startTime);
-    // };
-    
+        setWhoseTurn(newState.turn);
+    };
+
     useEffect(() => {
         if (game) {
-            setGameTime({
+            setGameTime((prev) => ({
+                ...prev,
                 white: game.state.whiteTTP,
                 black: game.state.blackTTP,
                 isWhitePaused: game.state.turn === 'b',
                 isBlackPaused: game.state.turn === 'w',
-            });
+            }));
         }
     }, [game]);
 
@@ -179,11 +209,13 @@ export default function GamePlayLayout() {
         ) {
             const socketMessage = lastJsonMessage as WSStartMessage;
 
-            console.log(`Got new json message:`, socketMessage);
-            
+            // console.log(`Got new json message:`, socketMessage);
+
             if (socketMessage.type == 'game_start') {
                 const game = socketMessage.game;
+
                 const parsedGame: ChessGame = {
+                    startTime: game.startTime,
                     whitePlayer: JSON.parse(game.whitePlayer) as Player,
                     blackPlayer: JSON.parse(game.blackPlayer) as Player,
                     state: JSON.parse(game.state),
@@ -196,22 +228,22 @@ export default function GamePlayLayout() {
                         : 'b'
                 );
 
-                setGame(parsedGame); 
-                handleGameStateUpdate(parsedGame.state)               
+                setGame(parsedGame);
+                handleGameStateUpdate(parsedGame.state);
                 setIsReady(true);
             } else if (
                 socketMessage.type == 'move' ||
                 socketMessage.type == 'move_accepted'
             ) {
                 const moveMsg = lastJsonMessage as WSMoveMessage;
-                
-                // forcing this assertion might be problematic
+
                 const newGameState: ChessGame = {
+                    startTime: moveMsg.startTime,
                     duration: moveMsg.duration,
                     whitePlayer: game!.whitePlayer,
                     blackPlayer: game!.blackPlayer,
                     state: moveMsg.state,
-                };
+                }; // forcing this assertion might be problematic
 
                 console.log('new state', newGameState);
 
@@ -220,49 +252,6 @@ export default function GamePlayLayout() {
             }
         }
     }, [lastMessage, lastJsonMessage]);
-
-    function updateMoveHistory(move: string[]) {
-        if (move.length != 0) {
-            if (moveCount == 0) {
-                movePairs.push(move);
-                setMoveCount(1);
-                return;
-            } else {
-                const pairs: string[][] = [...movePairs];
-                
-                if (moveCount % 2 == 0) pairs.push(move);
-                else pairs[movePairs.length - 1].push(...move);
-
-                setMoveCount((moveCount) => moveCount + 1);
-                setMovePairs(pairs);
-            }
-        }
-    }
-
-    function isValidGameTime(time: GameTimeState): boolean {
-        return (
-            !isNaN(time.white) &&
-            !isNaN(time.black) &&
-            time.white > 0 &&
-            time.black > 0
-        );
-    }
-
-    function makeMove(move: BoardMove) {
-        if (playerInfo) {
-            console.log('gameID:', playerInfo.gameID);
-            sendJsonMessage({
-                type: 'move',
-                data: {
-                    gameID: playerInfo.gameID,
-                    username: playerInfo?.username,
-                    whiteTTP: gameTime.white,
-                    blackTTP: gameTime.black,
-                    ...move,
-                },
-            });
-        }
-    }
 
     return (
         <>

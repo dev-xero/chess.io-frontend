@@ -35,58 +35,62 @@ export default function GameStatsBar(props: IGameStatsBarProps) {
     return (
         <aside className="col-span-1 order-2 md:order-1">
             <Card>
-                <h3 className="flex gap-2 items-center text-foreground">
-                    <div>
-                        {props.gameType == 'Rapid' ? (
-                            <Lightning size={24} weight="fill" />
-                        ) : props.gameType == 'Blitz' ? (
-                            <Timer size={24} weight="fill" />
-                        ) : (
-                            <Asterisk size={24} weight="fill" />
-                        )}
-                    </div>
-                    <span className="font-bold">{props.gameType} Game</span>
-                </h3>
-                <p className="flex gap-2 mt-2 text-faded items-center">
-                    <Clock size={18} weight="fill" />
-                    {props.gameType == 'Rapid'
-                        ? '10'
-                        : props.gameType == 'Blitz'
-                        ? '5'
-                        : '3'}{' '}
-                    mins
-                </p>
+                <div className="flex sm:block gap-2 flex-row justify-center items-center">
+                    <h3 className="flex gap-2 items-center text-foreground">
+                        <div>
+                            {props.gameType == 'Rapid' ? (
+                                <Lightning size={24} weight="fill" />
+                            ) : props.gameType == 'Blitz' ? (
+                                <Timer size={24} weight="fill" />
+                            ) : (
+                                <Asterisk size={24} weight="fill" />
+                            )}
+                        </div>
+                        <span className="font-bold">{props.gameType} Game</span>
+                    </h3>
+                    <p className="flex gap-2 sm:mt-2 text-faded items-center">
+                        <Clock size={18} weight="fill" />
+                        {props.gameType == 'Rapid'
+                            ? '10'
+                            : props.gameType == 'Blitz'
+                            ? '5'
+                            : '3'}{' '}
+                        mins
+                    </p>
+                </div>
             </Card>
             <Card>
                 <h3 className="w-full text-xs font-bold text-faded mb-2 text-center">
                     CLOCK
                 </h3>
-                <ChessClock
-                    label={props.whitePlayerName}
-                    timeLimit={props.duration}
-                    currentTime={props.gameTime.white}
-                    shouldPause={props.gameTime.isWhitePaused}
-                    onTimeElapsed={() => alert('White Time Up!')}
-                    onTick={(ms) =>
-                        props.setGameTime({
-                            ...props.gameTime,
-                            white: ms,
-                        })
-                    }
-                />
-                <ChessClock
-                    label={props.blackPlayerName}
-                    timeLimit={props.duration}
-                    currentTime={props.gameTime.black}
-                    shouldPause={props.gameTime.isBlackPaused}
-                    onTimeElapsed={() => alert('Black Time Up!')}
-                    onTick={(ms) =>
-                        props.setGameTime({
-                            ...props.gameTime,
-                            black: ms,
-                        })
-                    }
-                />
+                <div className="flex items-center justify-center flex-row sm:flex-col gap-2">
+                    <ChessClock
+                        label={props.whitePlayerName}
+                        timeLimit={props.duration}
+                        currentTime={props.gameTime.white}
+                        shouldPause={props.gameTime.isWhitePaused}
+                        onTimeElapsed={() => alert('White Time Up!')}
+                        onTick={(ms) =>
+                            props.setGameTime({
+                                ...props.gameTime,
+                                white: ms,
+                            })
+                        }
+                    />
+                    <ChessClock
+                        label={props.blackPlayerName}
+                        timeLimit={props.duration}
+                        currentTime={props.gameTime.black}
+                        shouldPause={props.gameTime.isBlackPaused}
+                        onTimeElapsed={() => alert('Black Time Up!')}
+                        onTick={(ms) =>
+                            props.setGameTime({
+                                ...props.gameTime,
+                                black: ms,
+                            })
+                        }
+                    />
+                </div>
             </Card>
             <Card>
                 <h3 className="w-full text-xs font-bold text-faded mb-2 text-center">

@@ -84,7 +84,7 @@ export default function ChessClock({
         : formatTime(timeLimit);
 
     return (
-        <section className="w-full py-2 rounded-md font-bold text-2xl">
+        <section className="w-full py-2 rounded-md font-bold text-2xl text-center sm:text-left">
             <p className="font-bold text-xs text-faded mb-1">
                 {label.toUpperCase()}
             </p>
