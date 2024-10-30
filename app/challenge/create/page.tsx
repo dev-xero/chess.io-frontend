@@ -1,9 +1,9 @@
 'use client';
 
-import ChallengeIcon from '@/components/ChallengeIcon';
-import IconButton from '@/components/IconButton';
+import ChallengeIcon from '@/components/ui/ChallengeIcon';
+import IconButton from '@/components/ui/IconButton';
 import TimeControlPill from '@/components/TimeControlPill';
-import Error from '@/components/Error';
+import Error from '@/components/ui/Error';
 import { TIME_CONTROL } from '@/config/controls';
 import CenteredGrid from '@/layout/CenteredGrid';
 import { ErrorResponse } from '@/util/error';
@@ -69,7 +69,11 @@ export default function Page() {
             const { expiresIn, link } = data.payload;
             localStorage.setItem(
                 keys.game.pending,
-                JSON.stringify({ expiresIn, link, challenger: loggedInUser.username })
+                JSON.stringify({
+                    expiresIn,
+                    link,
+                    challenger: loggedInUser.username,
+                })
             );
             const parts = link.split('/');
             const challenger = parts[1];

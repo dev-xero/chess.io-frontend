@@ -1,11 +1,11 @@
 'use client';
 
-import Error from '@/components/Error';
-import FilledButton from '@/components/FilledButton';
-import InputField from '@/components/InputField';
-import Link from '@/components/Link';
-import Marker from '@/components/Marker';
-import Success from '@/components/Success';
+import Error from '@/components/ui/Error';
+import FilledButton from '@/components/ui/FilledButton';
+import InputField from '@/components/ui/InputField';
+import Link from '@/components/ui/Link';
+import Marker from '@/components/ui/Marker';
+import Success from '@/components/ui/Success';
 import config from '@/config/config';
 import NetworkConfig from '@/config/http';
 import CenteredGrid from '@/layout/CenteredGrid';

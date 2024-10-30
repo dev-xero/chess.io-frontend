@@ -38,9 +38,7 @@ export default function Page() {
                 console.error(error);
             }
         } else {
-            alert(
-                "Your device doesn't support native sharing, copy the link instead."
-            );
+            await navigator.clipboard.writeText(link);
         }
     }
 
@@ -107,32 +105,22 @@ export default function Page() {
                                 Challenge Pending
                             </h2>
                             <p className="text-faded">
-                                We&apos;re waiting for someone to accept this
-                                challenge, you can share this link with your
-                                friends.
+                                Waiting for someone to accept this challenge.
                             </p>
                             {pendingChallenge && (
                                 <>
-                                    <a
-                                        className="my-4 text-sm text-primary"
-                                        href={challengeLink}
-                                        target="_blank"
+                                    <p
+                                        className="my-4 underline underline-offset-4 text-sm text-primary cursor-pointer"
+                                        onClick={async () =>
+                                            await handleLinkShare(challengeLink)
+                                        }
                                     >
-                                        challenge link
-                                    </a>
-                                    {typeof navigator.share === 'function' && (
-                                        <p
-                                            className="my-2 text-underline underline-offset-4 text-sm text-faded hover:text-foreground transition-colors"
-                                            onClick={async () =>
-                                                await handleLinkShare(
-                                                    challengeLink
-                                                )
-                                            }
-                                        >
-                                            share this link
-                                        </p>
-                                    )}
-                                    <p className="mt-2 text-faded text-xs">
+                                        {typeof navigator.share === 'function'
+                                            ? 'share'
+                                            : 'copy'}{' '}
+                                        this challenge link
+                                    </p>
+                                    <p className="mt-6 text-faded text-xs">
                                         This challenge will expire in{' '}
                                         {pendingChallenge.expiresIn}
                                     </p>

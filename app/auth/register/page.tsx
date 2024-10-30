@@ -1,11 +1,11 @@
 'use client';
 
-import FilledButton from '@/components/FilledButton';
+import FilledButton from '@/components/ui/FilledButton';
 import ChessIO from '@/components/ChessIO';
-import InputField from '@/components/InputField';
-import Link from '@/components/Link';
-import Marker from '@/components/Marker';
-import Error from '@/components/Error';
+import InputField from '@/components/ui/InputField';
+import Link from '@/components/ui/Link';
+import Marker from '@/components/ui/Marker';
+import Error from '@/components/ui/Error';
 import CenteredGrid from '@/layout/CenteredGrid';
 import { Horse, Lock, Asterisk } from '@phosphor-icons/react';
 import { FormEvent, useState } from 'react';

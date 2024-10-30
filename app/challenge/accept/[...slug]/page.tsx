@@ -3,7 +3,7 @@
 import { keys } from '@/config/keys';
 import { useState, useEffect, useCallback } from 'react';
 import CenteredGrid from '@/layout/CenteredGrid';
-import Error from '@/components/Error';
+import Error from '@/components/ui/Error';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePathname } from 'next/navigation';
 import axios, { AxiosError } from 'axios';
