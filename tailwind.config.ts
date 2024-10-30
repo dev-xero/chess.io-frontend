@@ -18,6 +18,7 @@ const config: Config = {
                 faded: '#ADB7CB',
                 primary: '#4F90F0',
                 white: '#FFFFFF',
+                green: '#64FC6C'
             },
         },
     },

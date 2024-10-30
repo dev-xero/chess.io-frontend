@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import config from '@/config/config';
 import ProtectedPage from '@/components/ProtectedPage';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
+import NotificationCard from '@/components/ui/NotificationCard';
 
 interface IPendingChallenge {
     link: string;
@@ -19,6 +20,8 @@ export default function Page() {
     const [isMounted, setIsMounted] = useState(false);
     const [userID, setUserID] = useState<string | null>(null);
     const [challengeLink, setChallengeLink] = useState('');
+    const [isVisible, setIsVisible] = useState(false);
+
     const { sendJsonMessage, lastMessage, readyState } = useWebSocket(
         config.ws,
         {
@@ -28,17 +31,18 @@ export default function Page() {
     );
 
     async function handleLinkShare(link: string) {
-        if (typeof navigator != 'undefined' && navigator.share) {
-            try {
-                await navigator.share({
-                    title: 'Accept this chess challenge!',
-                    url: link,
-                });
-            } catch (error) {
-                console.error(error);
-            }
-        } else {
+        try {
             await navigator.clipboard.writeText(link);
+
+            setIsVisible(true);
+
+            const timer = setTimeout(() => {
+                setIsVisible(false);
+                clearTimeout(timer);
+            }, 1000);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to copy to clipboard.');
         }
     }
 
@@ -54,18 +58,22 @@ export default function Page() {
         const userData = JSON.parse(currentUser);
         setUserID(userData.id);
 
-        const theChallenge = JSON.parse(
+        const createdChallenge = JSON.parse(
             localStorage.getItem(keys.game.pending) ?? '{}'
         );
-        if (!theChallenge) {
+
+        if (!createdChallenge) {
             window.location.href = '/';
             return;
         }
 
-        setPendingChallenge(theChallenge);
-        setChallengeLink(`${config.url}/challenge/${theChallenge.link}`);
+        // check that the challenge still exists here
+
+        setPendingChallenge(createdChallenge);
+        setChallengeLink(`${config.url}/challenge/${createdChallenge.link}`);
     }, []);
 
+    // Websocket authentication
     useEffect(() => {
         console.log('Connection state changed.');
         if (readyState == ReadyState.OPEN && userID) {
@@ -115,10 +123,7 @@ export default function Page() {
                                             await handleLinkShare(challengeLink)
                                         }
                                     >
-                                        {typeof navigator.share === 'function'
-                                            ? 'share'
-                                            : 'copy'}{' '}
-                                        this challenge link
+                                        copy this challenge link
                                     </p>
                                     <p className="mt-6 text-faded text-xs">
                                         This challenge will expire in{' '}
@@ -127,6 +132,13 @@ export default function Page() {
                                 </>
                             )}
                         </section>
+                        {isVisible && (
+                            <NotificationCard
+                                type="Success"
+                                text="Successfully copied."
+                                className="fixed bottom-4"
+                            />
+                        )}
                     </section>
                 )}
             </CenteredGrid>
