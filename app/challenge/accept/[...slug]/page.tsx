@@ -12,21 +12,25 @@ import config from '@/config/config';
 import { getCookie } from 'cookies-next';
 import NetworkConfig from '@/config/http';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
+import FilledButton from '@/components/ui/FilledButton';
+import ChessIO from '@/components/ChessIO';
 
 export default function Page() {
-    const [userID, setUserID] = useState<string | null>(null);
-    const { sendJsonMessage, lastMessage, readyState } = useWebSocket(
-        config.ws,
-        {
-            share: false,
-            shouldReconnect: () => true,
-        }
-    );
-    const [error, setError] = useState('');
     const pathname = usePathname();
+    const [userID, setUserID] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const { sendJsonMessage, readyState } = useWebSocket(config.ws, {
+        share: false,
+        shouldReconnect: () => true,
+    });
 
     const acceptChallenge = useCallback(async (gameId: string) => {
+        setIsLoading(false);
+         
         const accessToken = getCookie(keys.auth);
+
         if (!accessToken) {
             setError('Session has expired, log in again.');
             window.location.href = '/auth/login';
@@ -34,6 +38,8 @@ export default function Page() {
         }
 
         try {
+            setIsLoading(true);
+
             const { data } = await axios.post(
                 `${config.api}/challenge/accept/${gameId}`,
                 {},
@@ -44,8 +50,10 @@ export default function Page() {
                     },
                 }
             );
+
             const { payload } = data;
             const gameID = payload.gameState.gameID.split(':')[1];
+
             localStorage.setItem(
                 keys.game.active,
                 JSON.stringify(payload.gameState)
@@ -65,8 +73,23 @@ export default function Page() {
             } else {
                 setError('An unknown error occurred.');
             }
+        } finally {
+            setIsLoading(false);
         }
     }, []);
+
+    function handleChallengeAccepted() {
+        const parts = pathname.split('/');
+
+        if (parts.length != 5) {
+            window.location.href = '/challenge/create';
+            return;
+        }
+
+        const gameID = parts[4];
+
+        if (userID && gameID) acceptChallenge(gameID);
+    }
 
     useEffect(() => {
         const currentUser = localStorage.getItem(keys.user);
@@ -89,29 +112,24 @@ export default function Page() {
         }
     }, [readyState, sendJsonMessage, userID]);
 
-    useEffect(() => {
-        console.log('Attempting to join game.');
-        const parts = pathname.split('/');
-        if (parts.length != 5) {
-            window.location.href = '/challenge/create';
-            return;
-        }
-        const gameID = parts[4];
-        if (userID && gameID) acceptChallenge(gameID);
-    }, [userID]);
-
-    useEffect(() => {
-        console.log(`Got a new message: ${lastMessage?.data}`);
-    }, [lastMessage]);
-
     return (
         <ProtectedPage>
             <CenteredGrid>
                 <section className="w-screen md:w-[512px] max-w-lg flex flex-col items-center py-2 px-4 relative">
                     <section className="text-center flex flex-col mt-8">
-                        <h2 className="font-bold mb-2 text-2xl">
-                            Accept this challenge
-                        </h2>
+                        <div className="flex justify-center items-center mb-4">
+                            <ChessIO />
+                        </div>
+                        <p className='text-faded mt-4  my-8'>
+                            <b className="text-foreground">{pathname.split('/')[3]}</b> is challenging you to a
+                            chess game.<br /> May the best player win.
+                        </p>
+                        <FilledButton
+                            label="Accept Challenge"
+                            pendingText="Accepting"
+                            isDisabled={isLoading}
+                            onClick={() => handleChallengeAccepted()}
+                        />
                         <Error err={error} />
                     </section>
                 </section>

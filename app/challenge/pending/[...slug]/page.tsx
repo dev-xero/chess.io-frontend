@@ -1,12 +1,13 @@
 'use client';
 
+import ProtectedPage from '@/components/ProtectedPage';
+import NotificationCard from '@/components/ui/NotificationCard';
+import config from '@/config/config';
 import { keys } from '@/config/keys';
 import CenteredGrid from '@/layout/CenteredGrid';
+import { AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import config from '@/config/config';
-import ProtectedPage from '@/components/ProtectedPage';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import NotificationCard from '@/components/ui/NotificationCard';
 
 interface IPendingChallenge {
     link: string;
@@ -123,7 +124,7 @@ export default function Page() {
                                             await handleLinkShare(challengeLink)
                                         }
                                     >
-                                        copy this challenge link
+                                        copy challenge link
                                     </p>
                                     <p className="mt-6 text-faded text-xs">
                                         This challenge will expire in{' '}
@@ -132,13 +133,17 @@ export default function Page() {
                                 </>
                             )}
                         </section>
-                        {isVisible && (
-                            <NotificationCard
-                                type="Success"
-                                text="Successfully copied."
-                                className="fixed bottom-4"
-                            />
-                        )}
+
+                        <AnimatePresence mode="wait">
+                            {isVisible && (
+                                <NotificationCard
+                                    type="Success"
+                                    text="Successfully copied."
+                                    className="fixed bottom-4"
+                                    key="notification"
+                                />
+                            )}
+                        </AnimatePresence>
                     </section>
                 )}
             </CenteredGrid>

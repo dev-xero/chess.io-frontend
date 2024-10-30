@@ -53,6 +53,7 @@ export default function Page() {
                 return;
             }
             localStorage.removeItem(keys.game.pending); // remove any previously pending games
+            
             const { data } = await axios.post(
                 `${config.api}/challenge/create?duration=${gameDuration}`,
                 {
@@ -65,8 +66,9 @@ export default function Page() {
                     },
                 }
             );
-            // console.log(data);
+            
             const { expiresIn, link } = data.payload;
+            
             localStorage.setItem(
                 keys.game.pending,
                 JSON.stringify({
@@ -75,9 +77,11 @@ export default function Page() {
                     challenger: loggedInUser.username,
                 })
             );
+
             const parts = link.split('/');
             const challenger = parts[1];
             const challengeID = parts[2];
+            
             window.location.href = `/challenge/pending/${challenger}/${challengeID}`;
         } catch (err) {
             const axiosError = err as AxiosError;
@@ -104,8 +108,7 @@ export default function Page() {
                         Create a Challenge
                     </h2>
                     <p className="text-faded">
-                        We&apos;ll generate a unique game link for you to play
-                        others with.
+                        A unique game link will be generated.
                     </p>
                 </section>
                 {/* TIME CONTROL */}
