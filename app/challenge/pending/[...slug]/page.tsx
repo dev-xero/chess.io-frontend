@@ -118,7 +118,7 @@ export default function Page() {
                             {pendingChallenge && (
                                 <>
                                     <p
-                                        className="my-4 underline underline-offset-4 text-sm text-primary cursor-pointer"
+                                        className="my-4 underline underline-offset-4 text-sm text-primary cursor-pointer select-none"
                                         onClick={async () =>
                                             await handleLinkShare(challengeLink)
                                         }
