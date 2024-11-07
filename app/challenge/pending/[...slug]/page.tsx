@@ -165,7 +165,11 @@ export default function Page() {
                             )}
                         </section>
 
-                        <AnimatePresence mode="wait">
+                        <AnimatePresence 
+                            mode="wait"
+                            initial={false}
+                            onExitComplete={() => null}
+                        >
                             {isVisible && (
                                 <NotificationCard
                                     type="Success"
