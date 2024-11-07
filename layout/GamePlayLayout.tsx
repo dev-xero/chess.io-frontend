@@ -192,7 +192,7 @@ export default function GamePlayLayout() {
                     });
                 } catch (err) {
                     console.warn(err);
-                    window.location.reload();
+                    // window.location.location = '/challenge/create'
                 }
             }
         };
@@ -273,7 +273,7 @@ export default function GamePlayLayout() {
             !isValidGameTime(gameTime) ? (
                 <CenteredGrid>
                     <h3>
-                        Waiting for opponent, refresh if this takes too long.
+                        waiting
                     </h3>
                 </CenteredGrid>
             ) : (
