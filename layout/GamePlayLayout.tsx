@@ -22,6 +22,7 @@ import {
     WSMoveMessage,
     WSStartMessage,
 } from './interfaces/gameplay.interfaces';
+import CenteredGrid from './CenteredGrid';
 
 export default function GamePlayLayout() {
     const pathname = usePathname();
@@ -51,8 +52,8 @@ export default function GamePlayLayout() {
 
     // Account for time lag from the client
     function syncTime(duration: number) {
-        const serverTime = Date.now();
-        return duration - (serverTime - (game ? game.startTime : 0));
+        const now = Date.now();
+        return duration - (now - (game ? game.startTime : 0));
     }
 
     function updateMoveHistory(move: string[]) {
@@ -107,13 +108,16 @@ export default function GamePlayLayout() {
     }
 
     // Game state synchronization
-    const handleGameStateUpdate = (newState: ChessState) => {
+    const handleGameStateUpdate = (
+        newState: ChessState,
+        shouldSync = false
+    ) => {
         setFen(newState.fen);
 
         setGameTime((prev) => ({
             ...prev,
-            white: syncTime(newState.whiteTTP),
-            black: syncTime(newState.blackTTP),
+            white: shouldSync ? syncTime(newState.whiteTTP) : newState.whiteTTP,
+            black: shouldSync ? syncTime(newState.blackTTP) : newState.blackTTP,
             isWhitePaused: newState.turn === 'b',
             isBlackPaused: newState.turn === 'w',
         }));
@@ -188,7 +192,7 @@ export default function GamePlayLayout() {
                     });
                 } catch (err) {
                     console.warn(err);
-                    window.location.href = '/';
+                    window.location.reload();
                 }
             }
         };
@@ -229,12 +233,18 @@ export default function GamePlayLayout() {
                 );
 
                 setGame(parsedGame);
-                handleGameStateUpdate(parsedGame.state);
+                handleGameStateUpdate(parsedGame.state, true);
                 setIsReady(true);
             } else if (
                 socketMessage.type == 'move' ||
                 socketMessage.type == 'move_accepted'
             ) {
+                setGameTime((prev) => ({
+                    ...prev,
+                    isWhitePaused: true,
+                    isBlackPaused: true,
+                }));
+
                 const moveMsg = lastJsonMessage as WSMoveMessage;
 
                 const newGameState: ChessGame = {
@@ -261,7 +271,11 @@ export default function GamePlayLayout() {
             !fen ||
             !playerColor ||
             !isValidGameTime(gameTime) ? (
-                <></>
+                <CenteredGrid>
+                    <h3>
+                        Waiting for opponent, refresh if this takes too long.
+                    </h3>
+                </CenteredGrid>
             ) : (
                 <>
                     <header className="w-full flex items-center justify-center mt-4">

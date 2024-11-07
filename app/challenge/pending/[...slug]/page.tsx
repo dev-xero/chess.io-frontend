@@ -5,6 +5,7 @@ import NotificationCard from '@/components/ui/NotificationCard';
 import config from '@/config/config';
 import { keys } from '@/config/keys';
 import CenteredGrid from '@/layout/CenteredGrid';
+import { CookieValueTypes, getCookie } from 'cookies-next';
 import { AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
@@ -47,8 +48,34 @@ export default function Page() {
         }
     }
 
+    async function checkChallengeState(token: CookieValueTypes) {
+        const savedChallenge = localStorage.getItem(keys.game.pending) ?? '{}';
+        const stored = JSON.parse(savedChallenge);
+
+        const res = await fetch(`${config.api}/game/challenge/${stored.id}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        const data = await res.json();
+
+        if (data.started) {
+            window.location.href = `/game${data.gameID}`;
+        }
+    }
+
     useEffect(() => setIsMounted(true), []);
 
+    // Check if the challenge has been accepted on load
+    useEffect(() => {
+        if (challengeLink) {
+            const authToken = getCookie(keys.auth);
+            checkChallengeState(authToken);
+        }
+    }, [challengeLink]);
+
+    // Gather user data, then accept challenge link
     useEffect(() => {
         const currentUser = localStorage.getItem(keys.user);
         if (!currentUser) {
@@ -68,7 +95,7 @@ export default function Page() {
             return;
         }
 
-        // check that the challenge still exists here
+        // TODO: check that the challenge still exists here
 
         setPendingChallenge(createdChallenge);
         setChallengeLink(`${config.url}/challenge/${createdChallenge.link}`);
@@ -89,8 +116,10 @@ export default function Page() {
         console.log(`Got a new message: ${lastMessage?.data}`);
         try {
             const socketMsg = JSON.parse(lastMessage?.data);
+
             if (socketMsg.type == 'challenge_accepted') {
                 const gameID = socketMsg.gameID.split(':')[1];
+
                 localStorage.setItem(
                     keys.game.active,
                     JSON.stringify(socketMsg.gameState)
@@ -115,6 +144,8 @@ export default function Page() {
                             </h2>
                             <p className="text-faded">
                                 Waiting for someone to accept this challenge.
+                                Refresh this page if it doesn&apos;t redirect
+                                automatically.
                             </p>
                             {pendingChallenge && (
                                 <>

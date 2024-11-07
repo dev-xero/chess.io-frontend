@@ -74,6 +74,7 @@ export default function Page() {
                 JSON.stringify({
                     expiresIn,
                     link,
+                    id: link.split("/")[2],
                     challenger: loggedInUser.username,
                 })
             );
